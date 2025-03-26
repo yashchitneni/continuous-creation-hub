@@ -1,14 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, User, Bell, Menu, X } from 'lucide-react';
+import { Search, User, Bell, Menu, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,10 +39,7 @@ const Navbar = () => {
 
   const links = [
     { name: 'Home', path: '/' },
-    { name: 'Showcase', path: '/showcase' },
     { name: 'Hackathons', path: '/hackathons' },
-    { name: 'Tools', path: '/tools' },
-    { name: 'Community', path: '/community' },
     { name: 'About', path: '/about' },
   ];
 
@@ -85,21 +93,59 @@ const Navbar = () => {
           <button className="text-foreground/90 hover:text-jungle transition-colors p-1">
             <Search size={18} />
           </button>
-          <button className="text-foreground/90 hover:text-jungle transition-colors p-1 relative">
-            <Bell size={18} />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-coral rounded-full"></span>
-          </button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="bg-muted hover:bg-muted/80 text-foreground"
-            asChild
-          >
-            <Link to="/profile">
-              <User size={16} className="mr-2" />
-              <span>Profile</span>
-            </Link>
-          </Button>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                      src={user.user_metadata?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${user.email}`} 
+                      alt={user.email} 
+                    />
+                    <AvatarFallback>
+                      {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {user.user_metadata?.username || user.email?.split('@')[0] || 'User'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-muted hover:bg-muted/80 text-foreground"
+              asChild
+            >
+              <Link to="/auth">
+                <User size={16} className="mr-2" />
+                <span>Sign In</span>
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -130,26 +176,26 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="flex items-center space-x-6 mt-8">
-              <button className="text-foreground/90 hover:text-jungle transition-colors p-2">
-                <Search size={20} />
-              </button>
-              <button className="text-foreground/90 hover:text-jungle transition-colors p-2 relative">
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-coral rounded-full"></span>
-              </button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="bg-muted hover:bg-muted/80 text-foreground"
-                asChild
-              >
-                <Link to="/profile">
-                  <User size={18} className="mr-2" />
-                  <span>Profile</span>
+            {user ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="text-xl font-medium transition-colors hover:text-jungle"
+                >
+                  Profile
+                </Link>
+                <Button onClick={() => signOut()}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button asChild>
+                <Link to="/auth">
+                  Sign In
                 </Link>
               </Button>
-            </div>
+            )}
           </div>
         </div>
       </div>
