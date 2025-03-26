@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -157,7 +158,7 @@ export const useVoteForProject = () => {
       
       // If already voted, return early
       if (existingVote) {
-        return existingVote;
+        return { project_id: projectId, user_id: userId };
       }
       
       // Otherwise, cast a vote
@@ -183,7 +184,15 @@ export const useVoteForProject = () => {
     onSuccess: (data) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['votes', 'check', data.project_id, data.user_id] });
-      queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon', data.hackathon_id] });
+      
+      // We need to be sure hackathon_id exists before invalidating queries
+      if ('hackathon_id' in data) {
+        queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon', data.hackathon_id] });
+      } else {
+        // Alternatively, we could invalidate all hackathon project queries
+        queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon'] });
+      }
+      
       toast({
         title: 'Vote cast',
         description: 'Your vote has been recorded!',
