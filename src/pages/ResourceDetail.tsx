@@ -45,7 +45,7 @@ const ResourceDetail = () => {
         ) : resource ? (
           <div>
             <h1 className="text-3xl font-bold mb-6">{resource.title}</h1>
-            <div className="prose prose-sm sm:prose lg:prose-lg mx-auto dark:prose-invert">
+            <div className="prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none">
               <div dangerouslySetInnerHTML={{ __html: markdownToHtml(resource.content) }} />
             </div>
           </div>
