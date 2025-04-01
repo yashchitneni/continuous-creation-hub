@@ -31,46 +31,42 @@ const HackathonCard = ({ hackathon }: HackathonCardProps) => {
         {hackathon.description}
       </p>
       
-      <div className="mt-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {format(new Date(hackathon.start_date), 'MMM d')} - {format(new Date(hackathon.end_date), 'MMM d, yyyy')}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{participantCount} participants</span>
-          </div>
+      <div className="flex items-center justify-between mb-4 mt-auto">
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>
+            {format(new Date(hackathon.start_date), 'MMM d')} - {format(new Date(hackathon.end_date), 'MMM d, yyyy')}
+          </span>
         </div>
         
-        <div className="space-y-2">
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Users className="h-4 w-4" />
+          <span>{participantCount} participants</span>
+        </div>
+      </div>
+      
+      <div className="space-y-2 mt-2">
+        <Link to={`/hackathons/${hackathon.id}`}>
+          <Button className="w-full">
+            View Details
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
+        
+        {user && (isUpcoming || isActive) && !isParticipant && (
           <Link to={`/hackathons/${hackathon.id}`}>
-            <Button className="w-full">
-              View Details
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="outline" className="w-full">
+              Join Hackathon
             </Button>
           </Link>
-          
-          {user && (isUpcoming || isActive) && (
-            <>
-              {isParticipant ? (
-                <div className="w-full py-2 flex justify-center items-center text-sm text-muted-foreground">
-                  <Check className="h-4 w-4 mr-1 text-green-500" /> 
-                  You've joined this hackathon
-                </div>
-              ) : (
-                <Link to={`/hackathons/${hackathon.id}`}>
-                  <Button variant="outline" className="w-full">
-                    Join Hackathon
-                  </Button>
-                </Link>
-              )}
-            </>
-          )}
-        </div>
+        )}
+        
+        {user && isParticipant && (
+          <div className="w-full py-2 flex justify-center items-center text-sm text-muted-foreground">
+            <Check className="h-4 w-4 mr-1 text-green-500" /> 
+            You've joined this hackathon
+          </div>
+        )}
       </div>
     </div>
   );

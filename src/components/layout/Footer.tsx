@@ -49,12 +49,6 @@ const Footer = () => {
               <Link to="/hackathons" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Hackathons
               </Link>
-              <Link to="/tools" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
-                Tool Discovery
-              </Link>
-              <Link to="/community" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
-                Community Forum
-              </Link>
               <Link to="/about" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 About Us
               </Link>
@@ -65,21 +59,18 @@ const Footer = () => {
           <div className="space-y-6">
             <h4 className="font-medium text-foreground">Resources</h4>
             <div className="space-y-3">
-              <a href="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 How It Works
-              </a>
-              <a href="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              </Link>
+              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Submission Guidelines
-              </a>
-              <a href="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              </Link>
+              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Voting System
-              </a>
-              <a href="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
-                Co-Working Sessions
-              </a>
-              <a href="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              </Link>
+              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Privacy Policy
-              </a>
+              </Link>
             </div>
           </div>
 

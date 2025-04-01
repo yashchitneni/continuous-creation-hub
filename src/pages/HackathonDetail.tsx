@@ -18,6 +18,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import HackathonHeader from '@/components/hackathon/HackathonHeader';
 import ProjectsList from '@/components/hackathon/ProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
+import { toast } from '@/hooks/use-toast';
 
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,11 +66,32 @@ const HackathonDetail = () => {
   
   const handleJoinHackathon = async () => {
     if (!user) return;
+    
+    if (isParticipant) {
+      toast({
+        title: "Already joined",
+        description: "You are already a participant in this hackathon.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     await joinHackathon.mutateAsync({ hackathonId: hackathon.id, userId: user.id });
   };
   
   const handleDeleteHackathon = async () => {
     if (!user || hackathon.creator_id !== user.id) return;
+    
+    // Check if the hackathon has participants
+    if (participantCount > 0) {
+      toast({
+        title: "Cannot delete hackathon",
+        description: "This hackathon has participants and cannot be deleted. Please remove all participants first.",
+        variant: "destructive",
+      });
+      setIsDeleteDialogOpen(false);
+      return;
+    }
     
     try {
       await deleteHackathon.mutateAsync(hackathon.id);
@@ -152,6 +174,11 @@ const HackathonDetail = () => {
                   <DialogTitle>Delete Hackathon</DialogTitle>
                   <DialogDescription>
                     Are you sure you want to delete this hackathon? This action cannot be undone.
+                    {participantCount > 0 && (
+                      <p className="mt-2 text-red-500">
+                        Warning: This hackathon has participants. You must remove all participants before deleting.
+                      </p>
+                    )}
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="mt-6">
@@ -161,7 +188,7 @@ const HackathonDetail = () => {
                   <Button 
                     variant="destructive" 
                     onClick={handleDeleteHackathon}
-                    disabled={deleteHackathon.isPending}
+                    disabled={deleteHackathon.isPending || participantCount > 0}
                   >
                     {deleteHackathon.isPending ? 'Deleting...' : 'Delete Hackathon'}
                   </Button>
