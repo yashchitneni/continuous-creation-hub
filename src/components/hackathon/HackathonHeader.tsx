@@ -122,6 +122,58 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     }
   };
 
+  // Only render the Manage Phase button if the user is the creator
+  const renderManagePhaseButton = () => {
+    if (!isCreator) return null;
+    
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Manage Phase
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Change Hackathon Phase</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {!isUpcomingHackathon && (
+            <DropdownMenuItem 
+              onClick={() => handlePhaseChange('upcoming')}
+              disabled={isUpcomingHackathon || updateHackathonPhase.isPending}
+            >
+              Mark as Upcoming
+            </DropdownMenuItem>
+          )}
+          {!isActiveHackathon && (
+            <DropdownMenuItem 
+              onClick={() => handlePhaseChange('active')}
+              disabled={isActiveHackathon || updateHackathonPhase.isPending}
+            >
+              Start Hackathon (Active)
+            </DropdownMenuItem>
+          )}
+          {!isJudgingHackathon && isActiveHackathon && (
+            <DropdownMenuItem 
+              onClick={() => handlePhaseChange('judging')}
+              disabled={isJudgingHackathon || updateHackathonPhase.isPending}
+            >
+              Move to Judging
+            </DropdownMenuItem>
+          )}
+          {!isPastHackathon && isJudgingHackathon && (
+            <DropdownMenuItem 
+              onClick={() => handlePhaseChange('past')}
+              disabled={isPastHackathon || updateHackathonPhase.isPending}
+            >
+              Mark as Past
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
   return (
     <div className="mb-8">
       <div className="md:flex items-start justify-between mb-4">
@@ -136,52 +188,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         </div>
         
         <div className="mt-4 md:mt-0 flex items-center gap-4">
-          {isCreator && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Manage Phase
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Change Hackathon Phase</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {!isUpcomingHackathon && (
-                  <DropdownMenuItem 
-                    onClick={() => handlePhaseChange('upcoming')}
-                    disabled={isUpcomingHackathon || updateHackathonPhase.isPending}
-                  >
-                    Mark as Upcoming
-                  </DropdownMenuItem>
-                )}
-                {!isActiveHackathon && (
-                  <DropdownMenuItem 
-                    onClick={() => handlePhaseChange('active')}
-                    disabled={isActiveHackathon || updateHackathonPhase.isPending}
-                  >
-                    Start Hackathon (Active)
-                  </DropdownMenuItem>
-                )}
-                {!isJudgingHackathon && isActiveHackathon && (
-                  <DropdownMenuItem 
-                    onClick={() => handlePhaseChange('judging')}
-                    disabled={isJudgingHackathon || updateHackathonPhase.isPending}
-                  >
-                    Move to Judging
-                  </DropdownMenuItem>
-                )}
-                {!isPastHackathon && isJudgingHackathon && (
-                  <DropdownMenuItem 
-                    onClick={() => handlePhaseChange('past')}
-                    disabled={isPastHackathon || updateHackathonPhase.isPending}
-                  >
-                    Mark as Past
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {renderManagePhaseButton()}
           
           {isCreator && (
             <DropdownMenu>

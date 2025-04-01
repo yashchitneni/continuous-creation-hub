@@ -14,31 +14,42 @@ export const useUpdateHackathonPhase = () => {
   
   return useMutation({
     mutationFn: async ({ hackathonId, status }: UpdateHackathonPhaseParams) => {
-      // First fetch the current hackathon to make sure it exists
-      const { data: hackathon, error: fetchError } = await supabase
+      // First, verify the hackathon exists
+      const { data: existingHackathon, error: fetchError } = await supabase
         .from('hackathons')
-        .select('*')
+        .select('id, status')
         .eq('id', hackathonId)
-        .single();
+        .maybeSingle();
       
       if (fetchError) {
         throw new Error(`Failed to find hackathon: ${fetchError.message}`);
       }
       
-      // Then update it
+      if (!existingHackathon) {
+        throw new Error(`Hackathon with ID ${hackathonId} not found`);
+      }
+      
+      // If the status is already the same, return the existing hackathon
+      if (existingHackathon.status === status) {
+        console.log(`Hackathon is already in ${status} phase. No update needed.`);
+        return existingHackathon;
+      }
+      
+      // Then update it with prefer header to handle multiple or no rows
       const { data, error } = await supabase
         .from('hackathons')
         .update({ status })
         .eq('id', hackathonId)
         .select()
-        .maybeSingle(); // Using maybeSingle() instead of single() to handle cases where the row might not be found
+        .maybeSingle();
       
       if (error) {
+        console.error('Update error:', error);
         throw new Error(`Failed to update hackathon: ${error.message}`);
       }
       
       if (!data) {
-        throw new Error('No hackathon was updated');
+        throw new Error('No hackathon was updated. The hackathon may not exist or you may not have permission to update it.');
       }
       
       return data;
