@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -75,7 +74,8 @@ const CreateHackathonForm = ({ onClose }: { onClose: () => void }) => {
       description,
       start_date: startDate,
       end_date: endDate,
-      status: 'upcoming'
+      status: 'upcoming',
+      creator_id: user.id
     });
     
     onClose();

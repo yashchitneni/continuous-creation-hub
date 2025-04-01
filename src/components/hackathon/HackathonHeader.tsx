@@ -4,8 +4,16 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tag } from '@/components/ui/tag';
-import { Calendar, Users } from 'lucide-react';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar, Users, Trash2 } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogTrigger, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter 
+} from '@/components/ui/dialog';
 import { HackathonStatus } from '@/hooks/useHackathons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useHackathonParticipants } from '@/hooks/useProjects';
@@ -18,11 +26,13 @@ interface HackathonHeaderProps {
     start_date: string;
     end_date: string;
     status: HackathonStatus;
+    creator_id?: string | null;
   };
   participantCount: number;
   isParticipant: boolean;
   user: any;
   onJoinHackathon: () => void;
+  onDeleteHackathon?: () => void;
   isJoinHackathonPending: boolean;
   isSubmitDialogOpen: boolean;
   setIsSubmitDialogOpen: (isOpen: boolean) => void;
@@ -34,6 +44,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   isParticipant,
   user,
   onJoinHackathon,
+  onDeleteHackathon,
   isJoinHackathonPending,
   isSubmitDialogOpen,
   setIsSubmitDialogOpen
@@ -43,8 +54,10 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   const isJudgingHackathon = hackathon.status === 'judging';
   const isPastHackathon = hackathon.status === 'past';
   const [isParticipantDialogOpen, setIsParticipantDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { data: participants = [] } = useHackathonParticipants(hackathon.id);
+  const isCreator = user && hackathon.creator_id === user.id;
 
   return (
     <div className="mb-10 glassmorphism rounded-xl p-8">
@@ -86,22 +99,43 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           </div>
         </div>
         
-        {user && !isParticipant && (isUpcomingHackathon || isActiveHackathon) && (
-          <Button 
-            onClick={onJoinHackathon}
-            disabled={isJoinHackathonPending}
-          >
-            {isJoinHackathonPending ? 'Joining...' : 'Join Hackathon'}
-          </Button>
-        )}
-        
-        {user && isParticipant && isActiveHackathon && (
-          <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>Submit Project</Button>
-            </DialogTrigger>
-          </Dialog>
-        )}
+        <div className="flex gap-2">
+          {user && !isParticipant && (isUpcomingHackathon || isActiveHackathon) && (
+            <Button 
+              onClick={onJoinHackathon}
+              disabled={isJoinHackathonPending}
+            >
+              {isJoinHackathonPending ? 'Joining...' : 'Join Hackathon'}
+            </Button>
+          )}
+          
+          {user && isParticipant && (isUpcomingHackathon || isActiveHackathon) && (
+            <Button 
+              variant="secondary"
+              disabled
+            >
+              Joined
+            </Button>
+          )}
+          
+          {user && isParticipant && isActiveHackathon && (
+            <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Submit Project</Button>
+              </DialogTrigger>
+            </Dialog>
+          )}
+          
+          {isCreator && onDeleteHackathon && (
+            <Button 
+              variant="destructive" 
+              size="icon"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       
       <div className="prose max-w-none">
@@ -139,6 +173,35 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Hackathon Confirmation Dialog */}
+      {isCreator && onDeleteHackathon && (
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Hackathon</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this hackathon? This action cannot be undone 
+                and all related projects and participant data will be lost.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  onDeleteHackathon();
+                  setIsDeleteDialogOpen(false);
+                }}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -1,9 +1,15 @@
 
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/context/AuthContext';
-import { useHackathon, useIsHackathonParticipant, useJoinHackathon, useHackathonParticipantCount } from '@/hooks/useHackathons';
+import { 
+  useHackathon, 
+  useIsHackathonParticipant, 
+  useJoinHackathon, 
+  useHackathonParticipantCount,
+  useDeleteHackathon
+} from '@/hooks/useHackathons';
 import { useHackathonProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,6 +21,7 @@ import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   
   const { data: hackathon, isLoading: loadingHackathon } = useHackathon(id);
@@ -23,6 +30,7 @@ const HackathonDetail = () => {
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
   
   const joinHackathon = useJoinHackathon();
+  const deleteHackathon = useDeleteHackathon();
   
   if (loadingHackathon) {
     return (
@@ -58,6 +66,17 @@ const HackathonDetail = () => {
     await joinHackathon.mutateAsync({ hackathonId: hackathon.id, userId: user.id });
   };
   
+  const handleDeleteHackathon = async () => {
+    if (!user || hackathon.creator_id !== user.id) return;
+    
+    try {
+      await deleteHackathon.mutateAsync(hackathon.id);
+      navigate('/hackathons');
+    } catch (error) {
+      console.error('Error deleting hackathon:', error);
+    }
+  };
+  
   return (
     <PageLayout>
       <section className="w-full py-16 px-4 sm:px-6">
@@ -78,6 +97,7 @@ const HackathonDetail = () => {
             isParticipant={isParticipant}
             user={user}
             onJoinHackathon={handleJoinHackathon}
+            onDeleteHackathon={handleDeleteHackathon}
             isJoinHackathonPending={joinHackathon.isPending}
             isSubmitDialogOpen={isSubmitDialogOpen}
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
