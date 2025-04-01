@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { HackathonStatus } from '@/hooks/useHackathons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useHackathonParticipants } from '@/hooks/useProjects';
+import { useHackathonParticipants } from '@/hooks/useHackathons';
 
 interface HackathonHeaderProps {
   hackathon: {

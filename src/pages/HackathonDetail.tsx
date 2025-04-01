@@ -8,7 +8,8 @@ import {
   useIsHackathonParticipant, 
   useJoinHackathon, 
   useHackathonParticipantCount,
-  useDeleteHackathon
+  useDeleteHackathon,
+  HackathonStatus
 } from '@/hooks/useHackathons';
 import { useHackathonProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
@@ -77,6 +78,12 @@ const HackathonDetail = () => {
     }
   };
   
+  // Cast the status to HackathonStatus to fix the type error
+  const typedHackathon = {
+    ...hackathon,
+    status: hackathon.status as HackathonStatus
+  };
+  
   return (
     <PageLayout>
       <section className="w-full py-16 px-4 sm:px-6">
@@ -92,7 +99,7 @@ const HackathonDetail = () => {
           
           {/* Hackathon Header Component */}
           <HackathonHeader 
-            hackathon={hackathon}
+            hackathon={typedHackathon}
             participantCount={participantCount}
             isParticipant={isParticipant}
             user={user}
@@ -106,7 +113,7 @@ const HackathonDetail = () => {
           {/* Projects List Component */}
           <ProjectsList 
             projects={projects}
-            hackathon={hackathon}
+            hackathon={typedHackathon}
             isParticipant={isParticipant}
             user={user}
             loadingProjects={loadingProjects}
