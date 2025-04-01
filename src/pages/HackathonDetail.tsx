@@ -8,16 +8,18 @@ import {
   useIsHackathonParticipant, 
   useJoinHackathon, 
   useHackathonParticipantCount,
+  useHackathonParticipants,
   useDeleteHackathon,
   HackathonStatus
 } from '@/hooks/useHackathons';
 import { useHackathonProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Users } from 'lucide-react';
 import HackathonHeader from '@/components/hackathon/HackathonHeader';
 import ProjectsList from '@/components/hackathon/ProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
+import ParticipantsDialog from '@/components/hackathon/ParticipantsDialog';
 import { toast } from '@/hooks/use-toast';
 
 const HackathonDetail = () => {
@@ -26,10 +28,12 @@ const HackathonDetail = () => {
   const navigate = useNavigate();
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = useState(false);
   
   const { data: hackathon, isLoading: loadingHackathon } = useHackathon(id);
   const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
+  const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(id);
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
   
   const joinHackathon = useJoinHackathon();
@@ -82,17 +86,6 @@ const HackathonDetail = () => {
   const handleDeleteHackathon = async () => {
     if (!user || hackathon.creator_id !== user.id) return;
     
-    // Check if the hackathon has participants
-    if (participantCount > 0) {
-      toast({
-        title: "Cannot delete hackathon",
-        description: "This hackathon has participants and cannot be deleted. Please remove all participants first.",
-        variant: "destructive",
-      });
-      setIsDeleteDialogOpen(false);
-      return;
-    }
-    
     try {
       await deleteHackathon.mutateAsync(hackathon.id);
       setIsDeleteDialogOpen(false);
@@ -136,6 +129,18 @@ const HackathonDetail = () => {
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
           />
           
+          {/* Participants button */}
+          <div className="mt-4 mb-8">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsParticipantsDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              View Participants ({participantCount})
+            </Button>
+          </div>
+          
           {/* Projects List Component */}
           <ProjectsList 
             projects={projects}
@@ -166,6 +171,14 @@ const HackathonDetail = () => {
             </Dialog>
           )}
           
+          {/* Participants Dialog */}
+          <ParticipantsDialog 
+            open={isParticipantsDialogOpen}
+            onOpenChange={setIsParticipantsDialogOpen}
+            participants={participants}
+            isLoading={loadingParticipants}
+          />
+          
           {/* Delete Hackathon Dialog */}
           {isCreator && (
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -176,7 +189,7 @@ const HackathonDetail = () => {
                     Are you sure you want to delete this hackathon? This action cannot be undone.
                     {participantCount > 0 && (
                       <p className="mt-2 text-red-500">
-                        Warning: This hackathon has participants. You must remove all participants before deleting.
+                        Warning: This hackathon has participants. You cannot delete it until all participants are removed.
                       </p>
                     )}
                   </DialogDescription>

@@ -16,6 +16,7 @@ import Hackathons from "./pages/Hackathons";
 import Showcase from "./pages/Showcase";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import ResourceDetail from "./pages/ResourceDetail";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,10 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/profile/:id" element={<Profile />} />
               <Route path="/about" element={<About />} />
+              <Route path="/resources/:slug" element={<ResourceDetail />} />
+              <Route path="/terms" element={<ResourceDetail />} />
+              <Route path="/privacy" element={<ResourceDetail />} />
+              <Route path="/cookies" element={<ResourceDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

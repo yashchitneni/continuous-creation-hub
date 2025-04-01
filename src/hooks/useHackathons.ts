@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { format, isValid } from 'date-fns';
 
 // Type definitions
 export type HackathonStatus = 'upcoming' | 'active' | 'judging' | 'past' | 'all';
@@ -109,14 +110,27 @@ export const useHackathonParticipants = (hackathonId?: string) => {
         .from('hackathon_participants')
         .select(`
           *,
-          users (
-            id, username, avatar_url
+          users:user_id (
+            id, email, username, avatar_url
           )
         `)
         .eq('hackathon_id', hackathonId);
       
       if (error) throw error;
-      return data || [];
+      
+      // Format the date for each participant
+      return data?.map(participant => {
+        // Create a formatted date string or a fallback
+        let joinedDate = 'Unknown date';
+        if (participant.created_at && isValid(new Date(participant.created_at))) {
+          joinedDate = format(new Date(participant.created_at), 'MMM d, yyyy');
+        }
+        
+        return {
+          ...participant,
+          joinedDate
+        };
+      }) || [];
     },
     enabled: !!hackathonId
   });
@@ -129,13 +143,15 @@ export const useJoinHackathon = () => {
   return useMutation({
     mutationFn: async ({ hackathonId, userId }: { hackathonId: string; userId: string }) => {
       // First check if already a participant
-      const { data: existingParticipant } = await supabase
+      const { data: existingParticipant, error: checkError } = await supabase
         .from('hackathon_participants')
         .select('*')
         .eq('hackathon_id', hackathonId)
         .eq('user_id', userId)
         .maybeSingle();
         
+      if (checkError) throw checkError;
+      
       if (existingParticipant) {
         throw new Error('You have already joined this hackathon');
       }
@@ -153,6 +169,7 @@ export const useJoinHackathon = () => {
       queryClient.invalidateQueries({ queryKey: ['hackathonParticipants', variables.hackathonId] });
       queryClient.invalidateQueries({ queryKey: ['hackathonParticipantCount', variables.hackathonId] });
       queryClient.invalidateQueries({ queryKey: ['isHackathonParticipant', variables.hackathonId, variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['userHackathons', variables.userId] });
       toast({
         title: 'Success!',
         description: 'You have joined the hackathon.',
@@ -174,6 +191,18 @@ export const useDeleteHackathon = () => {
   
   return useMutation({
     mutationFn: async (hackathonId: string) => {
+      // First check if hackathon has participants
+      const { count, error: countError } = await supabase
+        .from('hackathon_participants')
+        .select('*', { count: 'exact', head: true })
+        .eq('hackathon_id', hackathonId);
+      
+      if (countError) throw countError;
+      
+      if (count && count > 0) {
+        throw new Error('Cannot delete a hackathon with participants. Please remove all participants first.');
+      }
+      
       const { error } = await supabase
         .from('hackathons')
         .delete()

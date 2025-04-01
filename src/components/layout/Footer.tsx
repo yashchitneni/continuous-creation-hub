@@ -68,17 +68,14 @@ const Footer = () => {
           <div className="space-y-6">
             <h4 className="font-medium text-foreground">Resources</h4>
             <div className="space-y-3">
-              <Link to="/about#how-it-works" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/resources/how-it-works" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 How It Works
               </Link>
-              <Link to="/hackathons" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/resources/submission-guidelines" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Submission Guidelines
               </Link>
-              <Link to="/showcase" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/resources/voting-system" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Voting System
-              </Link>
-              <Link to="/about#privacy" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
-                Privacy Policy
               </Link>
             </div>
           </div>
@@ -106,9 +103,9 @@ const Footer = () => {
         <div className="border-t border-border mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
           <p>© {currentYear} Just Keep Building. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/about#terms" className="hover:text-jungle transition-colors">Terms</Link>
-            <Link to="/about#privacy" className="hover:text-jungle transition-colors">Privacy</Link>
-            <Link to="/about#cookies" className="hover:text-jungle transition-colors">Cookies</Link>
+            <Link to="/terms" className="hover:text-jungle transition-colors">Terms</Link>
+            <Link to="/privacy" className="hover:text-jungle transition-colors">Privacy</Link>
+            <Link to="/cookies" className="hover:text-jungle transition-colors">Cookies</Link>
           </div>
         </div>
       </div>

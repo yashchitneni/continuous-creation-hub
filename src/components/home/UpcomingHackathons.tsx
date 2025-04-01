@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Calendar, Users, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ const HackathonCard = ({
   return (
     <Card 
       className={cn(
-        "border-none hover-scale overflow-hidden transition-all duration-300",
+        "border-none hover-scale overflow-hidden transition-all duration-300 flex flex-col h-full",
         className
       )}
     >
@@ -51,8 +51,8 @@ const HackathonCard = ({
         <div className="text-xs text-muted-foreground mb-2">{theme}</div>
         <h3 className="text-xl font-semibold">{title}</h3>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="flex-1 flex flex-col">
+        <div className="space-y-4 mb-6">
           <div className="flex items-center text-sm text-muted-foreground">
             <Calendar size={16} className="mr-2" />
             <span>{date}</span>
@@ -67,23 +67,23 @@ const HackathonCard = ({
             <Users size={16} className="mr-2" />
             <span>{participants} participants</span>
           </div>
+        </div>
+        
+        <div className="mt-auto space-y-2">
+          <Button asChild variant="outline" className="w-full">
+            <Link to={`/hackathons/${id}`}>View Details</Link>
+          </Button>
           
-          <div className="flex flex-col gap-2 mt-4">
-            <Button asChild variant="outline" className="w-full">
-              <Link to={`/hackathons/${id}`}>View Details</Link>
+          {user && !isParticipant ? (
+            <Button onClick={handleJoin} disabled={joinHackathon.isPending} className="w-full">
+              {joinHackathon.isPending ? 'Joining...' : 'Join Hackathon'}
             </Button>
-            
-            {user && !isParticipant ? (
-              <Button onClick={handleJoin} disabled={joinHackathon.isPending} className="w-full">
-                {joinHackathon.isPending ? 'Joining...' : 'Join Hackathon'}
-              </Button>
-            ) : user && isParticipant ? (
-              <div className="w-full py-2 flex justify-center items-center text-sm text-muted-foreground">
-                <Check className="h-4 w-4 mr-1 text-green-500" /> 
-                You've joined this hackathon
-              </div>
-            ) : null}
-          </div>
+          ) : user && isParticipant ? (
+            <div className="w-full py-2 flex justify-center items-center text-sm text-muted-foreground">
+              <Check className="h-4 w-4 mr-1 text-green-500" /> 
+              You've joined this hackathon
+            </div>
+          ) : null}
         </div>
       </CardContent>
     </Card>
