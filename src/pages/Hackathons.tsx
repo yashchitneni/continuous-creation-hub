@@ -191,6 +191,7 @@ const Hackathons = () => {
             <TabsList className="mb-8">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
               <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="judging">Judging</TabsTrigger>
               <TabsTrigger value="past">Past</TabsTrigger>
               <TabsTrigger value="all">All</TabsTrigger>
             </TabsList>

@@ -153,20 +153,29 @@ export type Database = {
       votes: {
         Row: {
           created_at: string
+          function_score: number
           id: string
           project_id: string
+          story_score: number
+          style_score: number
           user_id: string
         }
         Insert: {
           created_at?: string
+          function_score?: number
           id?: string
           project_id: string
+          story_score?: number
+          style_score?: number
           user_id: string
         }
         Update: {
           created_at?: string
+          function_score?: number
           id?: string
           project_id?: string
+          story_score?: number
+          style_score?: number
           user_id?: string
         }
         Relationships: [

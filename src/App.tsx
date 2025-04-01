@@ -10,8 +10,10 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import HackathonDetail from "./pages/HackathonDetail";
+import ProjectDetail from "./pages/ProjectDetail";
 import Profile from "./pages/Profile";
 import Hackathons from "./pages/Hackathons";
+import Showcase from "./pages/Showcase";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -27,12 +29,9 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/hackathons" element={<Hackathons />} />
-              <Route 
-                path="/hackathons/:id" 
-                element={
-                  <HackathonDetail />
-                } 
-              />
+              <Route path="/hackathons/:id" element={<HackathonDetail />} />
+              <Route path="/hackathons/:hackathonId/projects/:projectId" element={<ProjectDetail />} />
+              <Route path="/showcase" element={<Showcase />} />
               <Route 
                 path="/profile" 
                 element={

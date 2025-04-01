@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/context/AuthContext';
 import { useHackathon, useIsHackathonParticipant, useJoinHackathon, useHackathonParticipantCount } from '@/hooks/useHackathons';
-import { useHackathonProjects, useCreateProject, useVoteForProject, useHasVoted } from '@/hooks/useProjects';
+import { useHackathonProjects, useCreateProject, useVoteForProject, useHasVoted, useProjectScores } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,12 +13,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tag } from '@/components/ui/tag';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { Calendar, Users, Heart, Award, Github, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Calendar, Users, Heart, Award, Github, ExternalLink, ArrowLeft, Star } from 'lucide-react';
 
 interface ProjectCardProps {
   project: any;
   isParticipant: boolean;
-  isPastHackathon: boolean;
+  hackathonStatus: string;
   currentUserId?: string;
   isWinner?: boolean;
 }
@@ -26,17 +26,28 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ 
   project, 
   isParticipant, 
-  isPastHackathon, 
+  hackathonStatus, 
   currentUserId,
   isWinner = false
 }) => {
   const voteForProject = useVoteForProject();
   const { data: hasVoted } = useHasVoted(project.id, currentUserId);
+  const { data: projectScores } = useProjectScores(project.id);
   
   const handleVote = async () => {
     if (!currentUserId || hasVoted) return;
-    await voteForProject.mutateAsync({ projectId: project.id, userId: currentUserId });
+    await voteForProject.mutateAsync({ 
+      projectId: project.id, 
+      userId: currentUserId,
+      storyScore: 5,  // Default values - user will be able to set these in the detailed view
+      styleScore: 5,
+      functionScore: 5
+    });
   };
+
+  const isJudgingPhase = hackathonStatus === 'judging';
+  const isPastPhase = hackathonStatus === 'past';
+  const canVote = (isJudgingPhase || isPastPhase) && isParticipant && currentUserId;
   
   return (
     <div className={`glassmorphism rounded-xl overflow-hidden group relative ${isWinner ? 'border-2 border-yellow-400' : ''}`}>
@@ -77,49 +88,53 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           {project.description}
         </p>
         
-        <div className="flex flex-wrap items-center gap-4 mt-auto">
-          {project.github_link && (
-            <a 
-              href={project.github_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-jungle transition-colors"
-            >
-              <Github className="h-4 w-4" />
-              <span>Source</span>
-            </a>
-          )}
-          
-          {project.website_url && (
-            <a 
-              href={project.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-jungle transition-colors"
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>Demo</span>
-            </a>
-          )}
-          
-          {isPastHackathon && (
-            <div className="ml-auto flex items-center gap-1">
-              <Button
-                variant={hasVoted ? 'default' : 'outline'}
-                size="sm"
-                onClick={handleVote}
-                disabled={!isParticipant || !currentUserId || hasVoted || voteForProject.isPending}
-                title={!isParticipant ? 'Only participants can vote' : (hasVoted ? 'You already voted' : 'Vote for this project')}
-                className={hasVoted ? 'bg-coral hover:bg-coral/90' : ''}
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-auto">
+          <div className="flex flex-wrap gap-4">
+            {project.github_link && (
+              <a 
+                href={project.github_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-jungle transition-colors"
               >
-                <Heart 
-                  size={16} 
-                  className={`mr-1 ${hasVoted ? 'fill-white' : ''}`}
-                />
-                <span>{project.vote_count || 0}</span>
+                <Github className="h-4 w-4" />
+                <span>Source</span>
+              </a>
+            )}
+            
+            {project.website_url && (
+              <a 
+                href={project.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-jungle transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Demo</span>
+              </a>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {projectScores && projectScores.vote_count > 0 && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Star className="h-4 w-4 text-yellow-400" />
+                <span>{projectScores.total_score.toFixed(1)}</span>
+              </div>
+            )}
+            
+            {(isJudgingPhase || isPastPhase) && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <Link to={`/hackathons/${project.hackathon_id}/projects/${project.id}`}>
+                  {isPastPhase ? 'View Ratings' : (hasVoted ? 'Edit Rating' : 'Rate Project')}
+                </Link>
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -286,17 +301,28 @@ const HackathonDetail = () => {
     );
   }
   
-  const isPastHackathon = hackathon.status === 'past';
   const isUpcomingHackathon = hackathon.status === 'upcoming';
   const isActiveHackathon = hackathon.status === 'active';
+  const isJudgingHackathon = hackathon.status === 'judging';
+  const isPastHackathon = hackathon.status === 'past';
   
   const handleJoinHackathon = async () => {
     if (!user) return;
     await joinHackathon.mutateAsync({ hackathonId: hackathon.id, userId: user.id });
   };
   
+  // Sort projects by total score for judging and past hackathons
+  let sortedProjects = [...projects];
+  if (isJudgingHackathon || isPastHackathon) {
+    sortedProjects.sort((a, b) => {
+      const aScore = a.vote_count || 0;
+      const bScore = b.vote_count || 0;
+      return bScore - aScore;
+    });
+  }
+  
   // Find the winner (project with the most votes)
-  const winnerProject = isPastHackathon && projects.length > 0 ? projects[0] : null;
+  const winnerProject = (isJudgingHackathon || isPastHackathon) && sortedProjects.length > 0 ? sortedProjects[0] : null;
   
   return (
     <PageLayout>
@@ -322,7 +348,9 @@ const HackathonDetail = () => {
                         ? 'outline' 
                         : isActiveHackathon 
                           ? 'primary' 
-                          : 'default'
+                          : isJudgingHackathon
+                            ? 'default'
+                            : 'outline'
                     }
                   >
                     {hackathon.status.charAt(0).toUpperCase() + hackathon.status.slice(1)}
@@ -388,9 +416,11 @@ const HackathonDetail = () => {
               <h2 className="text-2xl font-bold">
                 {isPastHackathon 
                   ? 'Submitted Projects' 
-                  : isActiveHackathon 
-                    ? 'Projects In Progress' 
-                    : 'No Projects Yet'}
+                  : isJudgingHackathon
+                    ? 'Projects Under Judging'
+                    : isActiveHackathon 
+                      ? 'Projects In Progress' 
+                      : 'No Projects Yet'}
               </h2>
               
               {user && isParticipant && isActiveHackathon && (
@@ -430,19 +460,19 @@ const HackathonDetail = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Winner Section - Only show for past hackathons with projects */}
-                {isPastHackathon && winnerProject && (
+                {/* Winner Section - Only show for past or judging hackathons with projects */}
+                {(isPastHackathon || isJudgingHackathon) && winnerProject && (
                   <div className="mb-8">
                     <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                       <Award className="h-5 w-5 text-yellow-400" />
-                      <span>Winning Project</span>
+                      <span>{isPastHackathon ? 'Winning Project' : 'Current Leader'}</span>
                     </h3>
                     
                     <div className="grid grid-cols-1">
                       <ProjectCard
                         project={winnerProject}
                         isParticipant={isParticipant}
-                        isPastHackathon={isPastHackathon}
+                        hackathonStatus={hackathon.status}
                         currentUserId={user?.id}
                         isWinner={true}
                       />
@@ -457,14 +487,14 @@ const HackathonDetail = () => {
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map((project, index) => (
+                    {sortedProjects.map((project, index) => (
                       // Skip showing the winner again in the grid
-                      (isPastHackathon && index === 0) ? null : (
+                      ((isPastHackathon || isJudgingHackathon) && index === 0) ? null : (
                         <ProjectCard
                           key={project.id}
                           project={project}
                           isParticipant={isParticipant}
-                          isPastHackathon={isPastHackathon}
+                          hackathonStatus={hackathon.status}
                           currentUserId={user?.id}
                         />
                       )
