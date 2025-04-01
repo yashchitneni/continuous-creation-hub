@@ -63,7 +63,7 @@ const ParticipantsDialog: React.FC<ParticipantsDialogProps> = ({
               {participants.map((participant) => (
                 <Link 
                   key={participant.id} 
-                  to={`/profile/${participant.user_id}`}
+                  to={`/profile/${participant.users.id}`}
                   className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted transition-colors"
                 >
                   <Avatar className="h-12 w-12">

@@ -11,16 +11,19 @@ export type Database = {
     Tables: {
       hackathon_participants: {
         Row: {
+          created_at: string
           hackathon_id: string
           id: string
           user_id: string
         }
         Insert: {
+          created_at?: string
           hackathon_id: string
           id?: string
           user_id: string
         }
         Update: {
+          created_at?: string
           hackathon_id?: string
           id?: string
           user_id?: string
@@ -128,6 +131,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      resources: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

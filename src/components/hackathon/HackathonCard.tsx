@@ -5,22 +5,34 @@ import { format } from 'date-fns';
 import { Calendar, Users, ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { useHackathonParticipantCount, useIsHackathonParticipant } from '@/hooks/useHackathons';
+import { useHackathonParticipantCount, useIsHackathonParticipant, useJoinHackathon } from '@/hooks/useHackathons';
 
 interface HackathonCardProps {
   hackathon: any;
+  isHomePage?: boolean;
 }
 
-const HackathonCard = ({ hackathon }: HackathonCardProps) => {
+const HackathonCard = ({ hackathon, isHomePage = false }: HackathonCardProps) => {
   const { user } = useAuth();
-  const { data: participantCount } = useHackathonParticipantCount(hackathon.id);
+  const { data: participantCount = 0 } = useHackathonParticipantCount(hackathon.id);
   const { data: isParticipant = false } = useIsHackathonParticipant(hackathon.id, user?.id);
+  const joinHackathon = useJoinHackathon();
   
   const isActive = hackathon.status === 'active';
   const isUpcoming = hackathon.status === 'upcoming';
   
+  const handleJoinHackathon = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user || !hackathon.id || isParticipant) return;
+    
+    await joinHackathon.mutateAsync({
+      hackathonId: hackathon.id,
+      userId: user.id
+    });
+  };
+  
   return (
-    <div className="glassmorphism rounded-xl p-6 flex flex-col h-full hover-scale group">
+    <div className={`glassmorphism rounded-xl p-6 flex flex-col ${isHomePage ? 'h-full' : ''} hover-scale group`}>
       <h3 className="text-xl font-bold mb-2 group-hover:text-jungle transition-colors">
         <Link to={`/hackathons/${hackathon.id}`} className="block">
           {hackathon.title}
@@ -45,7 +57,7 @@ const HackathonCard = ({ hackathon }: HackathonCardProps) => {
         </div>
       </div>
       
-      <div className="space-y-2 mt-2">
+      <div className="space-y-2 mt-auto">
         <Link to={`/hackathons/${hackathon.id}`}>
           <Button className="w-full">
             View Details
@@ -54,11 +66,14 @@ const HackathonCard = ({ hackathon }: HackathonCardProps) => {
         </Link>
         
         {user && (isUpcoming || isActive) && !isParticipant && (
-          <Link to={`/hackathons/${hackathon.id}`}>
-            <Button variant="outline" className="w-full">
-              Join Hackathon
-            </Button>
-          </Link>
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleJoinHackathon}
+            disabled={joinHackathon.isPending}
+          >
+            {joinHackathon.isPending ? 'Joining...' : 'Join Hackathon'}
+          </Button>
         )}
         
         {user && isParticipant && (

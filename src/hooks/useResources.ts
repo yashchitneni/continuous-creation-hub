@@ -2,6 +2,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface Resource {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useResource = (slug: string | undefined) => {
   return useQuery({
     queryKey: ['resource', slug],
@@ -15,7 +24,7 @@ export const useResource = (slug: string | undefined) => {
         .single();
         
       if (error) throw error;
-      return data;
+      return data as Resource;
     },
     enabled: !!slug
   });
@@ -31,7 +40,7 @@ export const useResources = () => {
         .order('title');
         
       if (error) throw error;
-      return data || [];
+      return data as Resource[] || [];
     }
   });
 };
