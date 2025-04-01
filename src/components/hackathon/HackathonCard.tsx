@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -36,9 +35,9 @@ const HackathonCard = ({ hackathon, isHomePage = false }: HackathonCardProps) =>
       case 'upcoming':
         return 'secondary';
       case 'active':
-        return 'success';
+        return 'default'; // Changed from 'success' to 'default'
       case 'judging':
-        return 'warning';
+        return 'destructive'; // Changed from 'warning' to 'destructive'
       case 'past':
         return 'outline';
       default:

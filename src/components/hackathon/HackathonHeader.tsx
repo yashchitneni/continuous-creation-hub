@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -76,9 +75,9 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
       case 'upcoming':
         return 'secondary';
       case 'active':
-        return 'success';
+        return 'default';
       case 'judging':
-        return 'warning';
+        return 'destructive';
       case 'past':
         return 'outline';
       default:
@@ -131,7 +130,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         </div>
         
         <div className="mt-4 md:mt-0 flex items-center gap-4">
-          {/* Phase Management for Creator */}
           {isCreator && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -178,7 +176,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
             </DropdownMenu>
           )}
           
-          {/* Actions for Creator */}
           {isCreator && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -200,7 +197,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
             </DropdownMenu>
           )}
           
-          {/* Status Indicators and Buttons */}
           <div className="flex items-center gap-2">
             {user && !isParticipant && isActiveHackathon && (
               <Button onClick={onJoinHackathon} disabled={isJoinHackathonPending}>
@@ -232,7 +228,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         </button>
       </div>
 
-      {/* Participants Dialog */}
       <Dialog open={isParticipantsDialogOpen} onOpenChange={setIsParticipantsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -273,7 +268,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Phase Change Confirmation Dialog */}
       <AlertDialog open={isPhaseConfirmOpen} onOpenChange={setIsPhaseConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
