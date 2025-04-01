@@ -71,15 +71,18 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   const isPastHackathon = hackathon.status === 'past';
   
   const isCreator = user?.id === hackathon.creator_id;
+  console.log("User ID:", user?.id);
+  console.log("Creator ID:", hackathon.creator_id);
+  console.log("Is creator:", isCreator);
 
   const getStatusBadgeVariant = () => {
     switch (hackathon.status) {
       case 'upcoming':
         return 'secondary';
       case 'active':
-        return 'default'; // Using default instead of success
+        return 'default'; 
       case 'judging':
-        return 'destructive'; // Using destructive instead of warning
+        return 'destructive'; 
       case 'past':
         return 'outline';
       default:
@@ -103,6 +106,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   };
 
   const handlePhaseChange = (phase: HackathonStatus) => {
+    console.log("Attempting to change phase to:", phase);
     setTargetPhase(phase);
     setIsPhaseConfirmOpen(true);
   };
@@ -110,6 +114,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   const confirmPhaseChange = async () => {
     if (!targetPhase) return;
     
+    console.log("Confirming phase change to:", targetPhase);
     try {
       await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
@@ -124,8 +129,12 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
 
   // Only render the Manage Phase button if the user is the creator
   const renderManagePhaseButton = () => {
-    if (!isCreator) return null;
+    if (!isCreator) {
+      console.log("Not rendering Manage Phase button because user is not creator");
+      return null;
+    }
     
+    console.log("Rendering Manage Phase button for creator");
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -14,7 +14,9 @@ export const useUpdateHackathonPhase = () => {
   
   return useMutation({
     mutationFn: async ({ hackathonId, status }: UpdateHackathonPhaseParams) => {
-      // First, verify the hackathon exists
+      console.log('Updating hackathon phase:', { hackathonId, status });
+      
+      // First, verify the hackathon exists and get current status
       const { data: existingHackathon, error: fetchError } = await supabase
         .from('hackathons')
         .select('id, status')
@@ -22,10 +24,12 @@ export const useUpdateHackathonPhase = () => {
         .maybeSingle();
       
       if (fetchError) {
+        console.error('Error fetching hackathon:', fetchError);
         throw new Error(`Failed to find hackathon: ${fetchError.message}`);
       }
       
       if (!existingHackathon) {
+        console.error('Hackathon not found:', hackathonId);
         throw new Error(`Hackathon with ID ${hackathonId} not found`);
       }
       
@@ -35,23 +39,22 @@ export const useUpdateHackathonPhase = () => {
         return existingHackathon;
       }
       
-      // Then update it with prefer header to handle multiple or no rows
+      console.log('Current status:', existingHackathon.status, 'New status:', status);
+      
+      // Update using a filter by ID rather than a direct update by primary key
       const { data, error } = await supabase
         .from('hackathons')
-        .update({ status })
+        .update({ status: status })
         .eq('id', hackathonId)
         .select()
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error('Update error:', error);
-        throw new Error(`Failed to update hackathon: ${error.message}`);
+        throw new Error(`Failed to update hackathon phase: ${error.message}`);
       }
       
-      if (!data) {
-        throw new Error('No hackathon was updated. The hackathon may not exist or you may not have permission to update it.');
-      }
-      
+      console.log('Update successful:', data);
       return data;
     },
     onSuccess: (data) => {

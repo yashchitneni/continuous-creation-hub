@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
@@ -30,11 +29,16 @@ const HackathonDetail = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = useState(false);
   
+  console.log("Hackathon ID from params:", id);
+  console.log("Current user:", user);
+  
   const { data: hackathon, isLoading: loadingHackathon } = useHackathon(id);
   const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(id);
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
+  
+  console.log("Hackathon data:", hackathon);
   
   const joinHackathon = useJoinHackathon();
   const deleteHackathon = useDeleteHackathon();
@@ -95,13 +99,13 @@ const HackathonDetail = () => {
     }
   };
   
-  // Cast the status to HackathonStatus to fix the type error
   const typedHackathon = {
     ...hackathon,
-    status: hackathon.status as HackathonStatus
+    status: hackathon.status as HackathonStatus,
+    creator_id: hackathon.creator_id || null
   };
   
-  const isCreator = user?.id === hackathon.creator_id;
+  console.log("Is creator:", user?.id === typedHackathon.creator_id);
   
   return (
     <PageLayout>
@@ -174,7 +178,7 @@ const HackathonDetail = () => {
             isLoading={loadingParticipants}
           />
           
-          {isCreator && (
+          {typedHackathon.creator_id && (
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
