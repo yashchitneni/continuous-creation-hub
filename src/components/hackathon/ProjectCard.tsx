@@ -32,11 +32,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     
     await voteForProject.mutateAsync({
       projectId: project.id,
-      userId: currentUserId
+      userId: currentUserId,
+      storyScore: 5,
+      styleScore: 5,
+      functionScore: 5
     });
   };
   
-  // Check if the current user has already voted for this project
   const hasVoted = project.votes?.some((vote: any) => vote.user_id === currentUserId);
   
   return (
