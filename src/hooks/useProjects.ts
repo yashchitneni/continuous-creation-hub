@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -191,15 +192,15 @@ export const useProjectScores = (projectId?: string) => {
       }
       
       const voteCount = data.length;
-      const storyTotal = data.reduce((sum, vote) => sum + vote.story_score, 0);
-      const styleTotal = data.reduce((sum, vote) => sum + vote.style_score, 0);
-      const functionTotal = data.reduce((sum, vote) => sum + vote.function_score, 0);
+      const storyTotal = data.reduce((sum, vote) => sum + (vote.story_score || 0), 0);
+      const styleTotal = data.reduce((sum, vote) => sum + (vote.style_score || 0), 0);
+      const functionTotal = data.reduce((sum, vote) => sum + (vote.function_score || 0), 0);
       
       return {
         story_score: storyTotal / voteCount,
         style_score: styleTotal / voteCount,
         function_score: functionTotal / voteCount,
-        total_score: (storyTotal + styleTotal + functionTotal) / voteCount,
+        total_score: (storyTotal + styleTotal + functionTotal) / (voteCount * 3),
         vote_count: voteCount
       };
     },
@@ -283,11 +284,11 @@ export const useVoteForProject = () => {
       queryClient.invalidateQueries({ queryKey: ['votes', 'get', data.project_id, data.user_id] });
       queryClient.invalidateQueries({ queryKey: ['projects', 'scores', data.project_id] });
       
-      // We need to be sure hackathon_id exists before invalidating queries
+      // Check if hackathon_id exists before invalidating queries
       if ('hackathon_id' in data) {
         queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon', data.hackathon_id] });
       } else {
-        // Alternatively, we could invalidate all hackathon project queries
+        // Alternatively, invalidate all hackathon project queries
         queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon'] });
       }
       
