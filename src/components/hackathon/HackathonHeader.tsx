@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar, Users, MoreVertical, Edit, Trash2, PlusCircle, Clock } from 'lucide-react';
@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tag } from '@/components/ui/tag';
+import { toast } from '@/hooks/use-toast';
 
 interface HackathonHeaderProps {
   hackathon: any;
@@ -65,6 +66,22 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(hackathon.id);
   const updateHackathonPhase = useUpdateHackathonPhase();
   
+  // Store current hackathon status for debugging
+  const [currentStatus, setCurrentStatus] = useState<string>(hackathon.status);
+  
+  // Update our local status tracking when hackathon prop changes
+  useEffect(() => {
+    if (hackathon?.status !== currentStatus) {
+      console.log(`HackathonHeader: Status changed from ${currentStatus} to ${hackathon.status}`);
+      setCurrentStatus(hackathon.status);
+    }
+  }, [hackathon, currentStatus]);
+  
+  // Log the hackathon object every time it changes
+  useEffect(() => {
+    console.log("HackathonHeader received hackathon:", hackathon);
+  }, [hackathon]);
+  
   const isUpcomingHackathon = hackathon.status === 'upcoming';
   const isActiveHackathon = hackathon.status === 'active';
   const isJudgingHackathon = hackathon.status === 'judging';
@@ -74,6 +91,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   console.log("User ID:", user?.id);
   console.log("Creator ID:", hackathon.creator_id);
   console.log("Is creator:", isCreator);
+  console.log("Current hackathon status:", hackathon.status);
 
   const getStatusBadgeVariant = () => {
     switch (hackathon.status) {
@@ -107,6 +125,16 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
 
   const handlePhaseChange = (phase: HackathonStatus) => {
     console.log("Attempting to change phase to:", phase);
+    console.log("Current phase:", hackathon.status);
+    
+    if (phase === hackathon.status) {
+      toast({
+        title: "No change needed",
+        description: `The hackathon is already in ${phase} phase.`,
+      });
+      return;
+    }
+    
     setTargetPhase(phase);
     setIsPhaseConfirmOpen(true);
   };
@@ -115,13 +143,29 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     if (!targetPhase) return;
     
     console.log("Confirming phase change to:", targetPhase);
+    console.log("From current phase:", hackathon.status);
+    
     try {
-      await updateHackathonPhase.mutateAsync({
+      setIsPhaseConfirmOpen(false); // Close dialog first
+      
+      // Make sure we have a valid hackathon ID
+      if (!hackathon.id) {
+        console.error("Missing hackathon ID");
+        toast({
+          title: "Error",
+          description: "Missing hackathon ID",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const result = await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
         status: targetPhase
       });
       
-      setIsPhaseConfirmOpen(false);
+      console.log("Phase update result:", result);
+      
     } catch (error) {
       console.error('Error confirming phase change:', error);
     }
@@ -146,34 +190,34 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Change Hackathon Phase</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {!isUpcomingHackathon && (
+          {hackathon.status !== 'upcoming' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('upcoming')}
-              disabled={isUpcomingHackathon || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'upcoming' || updateHackathonPhase.isPending}
             >
               Mark as Upcoming
             </DropdownMenuItem>
           )}
-          {!isActiveHackathon && (
+          {hackathon.status !== 'active' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('active')}
-              disabled={isActiveHackathon || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'active' || updateHackathonPhase.isPending}
             >
               Start Hackathon (Active)
             </DropdownMenuItem>
           )}
-          {!isJudgingHackathon && isActiveHackathon && (
+          {hackathon.status !== 'judging' && hackathon.status === 'active' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('judging')}
-              disabled={isJudgingHackathon || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'judging' || updateHackathonPhase.isPending}
             >
               Move to Judging
             </DropdownMenuItem>
           )}
-          {!isPastHackathon && isJudgingHackathon && (
+          {hackathon.status !== 'past' && hackathon.status === 'judging' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('past')}
-              disabled={isPastHackathon || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'past' || updateHackathonPhase.isPending}
             >
               Mark as Past
             </DropdownMenuItem>

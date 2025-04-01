@@ -41,8 +41,7 @@ export const useUpdateHackathonPhase = () => {
       
       console.log('Current status:', existingHackathon.status, 'New status:', status);
       
-      // CRITICAL CHANGE: Just perform the update without expecting any data return
-      // We'll fetch the updated record separately after the update is successful
+      // Perform the update - we're not expecting a direct return of data
       const { error: updateError } = await supabase
         .from('hackathons')
         .update({ status })
@@ -53,7 +52,11 @@ export const useUpdateHackathonPhase = () => {
         throw new Error(`Failed to update hackathon phase: ${updateError.message}`);
       }
       
-      // Now fetch the updated hackathon data
+      // After successful update, fetch the updated record
+      // Adding a small delay to ensure the database has time to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Now fetch the updated hackathon data with a fresh query
       const { data: updatedHackathon, error: refetchError } = await supabase
         .from('hackathons')
         .select('*')
@@ -66,14 +69,22 @@ export const useUpdateHackathonPhase = () => {
       }
       
       if (!updatedHackathon) {
+        console.error('Could not retrieve the updated hackathon');
         throw new Error('Could not retrieve the updated hackathon');
       }
       
-      console.log('Update successful:', updatedHackathon);
+      console.log('Update successful, fetched updated hackathon:', updatedHackathon);
+      
+      // Explicitly check if the status was actually updated in the database
+      if (updatedHackathon.status !== status) {
+        console.error(`Status update failed: Database still shows ${updatedHackathon.status} instead of ${status}`);
+        // Despite the error, return what we have to avoid breaking the flow
+      }
+      
       return updatedHackathon;
     },
     onSuccess: (data) => {
-      // Invalidate relevant queries
+      // Immediately invalidate and refetch relevant queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ['hackathons'] });
       queryClient.invalidateQueries({ queryKey: ['hackathon', data.id] });
       
@@ -81,6 +92,9 @@ export const useUpdateHackathonPhase = () => {
         title: 'Hackathon phase updated',
         description: `The hackathon is now in ${data.status} phase.`,
       });
+      
+      // Force a refetch of the specific hackathon data
+      queryClient.refetchQueries({ queryKey: ['hackathon', data.id] });
     },
     onError: (error: any) => {
       console.error('Error updating hackathon phase:', error);

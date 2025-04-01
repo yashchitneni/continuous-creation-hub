@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -32,13 +33,31 @@ const HackathonDetail = () => {
   console.log("Hackathon ID from params:", id);
   console.log("Current user:", user);
   
-  const { data: hackathon, isLoading: loadingHackathon } = useHackathon(id);
+  // Use enabled option to make sure we have an ID before fetching
+  const { 
+    data: hackathon, 
+    isLoading: loadingHackathon,
+    refetch: refetchHackathon 
+  } = useHackathon(id);
+  
   const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(id);
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
   
   console.log("Hackathon data:", hackathon);
+  
+  // Set up effect to refetch hackathon data every few seconds while on the page
+  useEffect(() => {
+    if (!id) return;
+    
+    // Refetch hackathon data every 5 seconds to ensure we have the latest status
+    const intervalId = setInterval(() => {
+      refetchHackathon();
+    }, 5000);
+    
+    return () => clearInterval(intervalId);
+  }, [id, refetchHackathon]);
   
   const joinHackathon = useJoinHackathon();
   const deleteHackathon = useDeleteHackathon();
@@ -72,6 +91,14 @@ const HackathonDetail = () => {
     );
   }
   
+  // Make sure we have a proper status
+  const ensureValidStatus = (status: string): HackathonStatus => {
+    const validStatuses: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
+    return validStatuses.includes(status as HackathonStatus) 
+      ? (status as HackathonStatus) 
+      : 'upcoming';
+  };
+  
   const handleJoinHackathon = async () => {
     if (!user) return;
     
@@ -99,13 +126,15 @@ const HackathonDetail = () => {
     }
   };
   
+  // Ensure we have a properly typed hackathon object
   const typedHackathon = {
     ...hackathon,
-    status: hackathon.status as HackathonStatus,
+    status: ensureValidStatus(hackathon.status),
     creator_id: hackathon.creator_id || null
   };
   
   console.log("Is creator:", user?.id === typedHackathon.creator_id);
+  console.log("Final hackathon data passed to components:", typedHackathon);
   
   return (
     <PageLayout>
