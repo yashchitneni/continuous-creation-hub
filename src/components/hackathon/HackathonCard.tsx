@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Calendar, Users, ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { useHackathonParticipantCount, useIsHackathonParticipant, useJoinHackathon } from '@/hooks/useHackathons';
 
@@ -19,7 +20,6 @@ const HackathonCard = ({ hackathon, isHomePage = false }: HackathonCardProps) =>
   const joinHackathon = useJoinHackathon();
   
   const isActive = hackathon.status === 'active';
-  const isUpcoming = hackathon.status === 'upcoming';
   
   const handleJoinHackathon = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,13 +31,33 @@ const HackathonCard = ({ hackathon, isHomePage = false }: HackathonCardProps) =>
     });
   };
   
+  const getStatusBadgeVariant = () => {
+    switch (hackathon.status) {
+      case 'upcoming':
+        return 'secondary';
+      case 'active':
+        return 'success';
+      case 'judging':
+        return 'warning';
+      case 'past':
+        return 'outline';
+      default:
+        return 'default';
+    }
+  };
+  
   return (
     <div className={`glassmorphism rounded-xl p-6 flex flex-col ${isHomePage ? 'h-full' : ''} hover-scale group`}>
-      <h3 className="text-xl font-bold mb-2 group-hover:text-jungle transition-colors">
-        <Link to={`/hackathons/${hackathon.id}`} className="block">
-          {hackathon.title}
-        </Link>
-      </h3>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-xl font-bold group-hover:text-jungle transition-colors">
+          <Link to={`/hackathons/${hackathon.id}`} className="block">
+            {hackathon.title}
+          </Link>
+        </h3>
+        <Badge variant={getStatusBadgeVariant()} className="capitalize">
+          {hackathon.status}
+        </Badge>
+      </div>
       
       <p className="text-muted-foreground line-clamp-2 mb-4">
         {hackathon.description}
@@ -65,7 +85,7 @@ const HackathonCard = ({ hackathon, isHomePage = false }: HackathonCardProps) =>
           </Button>
         </Link>
         
-        {user && (isUpcoming || isActive) && !isParticipant && (
+        {user && isActive && !isParticipant && (
           <Button 
             variant="outline" 
             className="w-full"

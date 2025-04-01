@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, MoreVertical, Edit, Trash2, PlusCircle } from 'lucide-react';
+import { Calendar, Users, MoreVertical, Edit, Trash2, PlusCircle, Clock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -20,6 +21,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useHackathonParticipants } from '@/hooks/useHackathons';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
+import { HackathonStatus } from '@/hooks/useHackathons';
+import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface HackathonHeaderProps {
   hackathon: any;
@@ -45,7 +59,10 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   setIsSubmitDialogOpen
 }) => {
   const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = useState(false);
+  const [isPhaseConfirmOpen, setIsPhaseConfirmOpen] = useState(false);
+  const [targetPhase, setTargetPhase] = useState<HackathonStatus | null>(null);
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(hackathon.id);
+  const updateHackathonPhase = useUpdateHackathonPhase();
   
   const isUpcomingHackathon = hackathon.status === 'upcoming';
   const isActiveHackathon = hackathon.status === 'active';
@@ -54,15 +71,113 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   
   const isCreator = user?.id === hackathon.creator_id;
 
+  const getStatusBadgeVariant = () => {
+    switch (hackathon.status) {
+      case 'upcoming':
+        return 'secondary';
+      case 'active':
+        return 'success';
+      case 'judging':
+        return 'warning';
+      case 'past':
+        return 'outline';
+      default:
+        return 'default';
+    }
+  };
+
+  const getConfirmationMessage = () => {
+    switch (targetPhase) {
+      case 'active':
+        return "This will open the hackathon for participants to join and submit projects.";
+      case 'judging':
+        return "This will close project submissions and open the voting phase. Participants will be able to vote on projects.";
+      case 'past':
+        return "This will mark the hackathon as completed. Voting will be closed and results will be finalized.";
+      case 'upcoming':
+        return "This will reset the hackathon to upcoming status. All submissions and voting may be affected.";
+      default:
+        return "Are you sure you want to change the hackathon phase?";
+    }
+  };
+
+  const handlePhaseChange = (phase: HackathonStatus) => {
+    setTargetPhase(phase);
+    setIsPhaseConfirmOpen(true);
+  };
+
+  const confirmPhaseChange = async () => {
+    if (!targetPhase) return;
+    
+    await updateHackathonPhase.mutateAsync({
+      hackathonId: hackathon.id,
+      status: targetPhase
+    });
+    
+    setIsPhaseConfirmOpen(false);
+  };
+
   return (
     <div className="mb-8">
       <div className="md:flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-3xl font-bold mb-2">{hackathon.title}</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="text-3xl font-bold">{hackathon.title}</h2>
+            <Badge variant={getStatusBadgeVariant()} className="capitalize ml-2">
+              {hackathon.status}
+            </Badge>
+          </div>
           <p className="text-muted-foreground">{hackathon.description}</p>
         </div>
         
         <div className="mt-4 md:mt-0 flex items-center gap-4">
+          {/* Phase Management for Creator */}
+          {isCreator && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Manage Phase
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Change Hackathon Phase</DropdownMenuLabel>
+                {!isUpcomingHackathon && (
+                  <DropdownMenuItem 
+                    onClick={() => handlePhaseChange('upcoming')}
+                    disabled={isUpcomingHackathon || updateHackathonPhase.isPending}
+                  >
+                    Mark as Upcoming
+                  </DropdownMenuItem>
+                )}
+                {!isActiveHackathon && (
+                  <DropdownMenuItem 
+                    onClick={() => handlePhaseChange('active')}
+                    disabled={isActiveHackathon || updateHackathonPhase.isPending}
+                  >
+                    Start Hackathon (Active)
+                  </DropdownMenuItem>
+                )}
+                {!isJudgingHackathon && isActiveHackathon && (
+                  <DropdownMenuItem 
+                    onClick={() => handlePhaseChange('judging')}
+                    disabled={isJudgingHackathon || updateHackathonPhase.isPending}
+                  >
+                    Move to Judging
+                  </DropdownMenuItem>
+                )}
+                {!isPastHackathon && isJudgingHackathon && (
+                  <DropdownMenuItem 
+                    onClick={() => handlePhaseChange('past')}
+                    disabled={isPastHackathon || updateHackathonPhase.isPending}
+                  >
+                    Mark as Past
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          
           {/* Actions for Creator */}
           {isCreator && (
             <DropdownMenu>
@@ -87,27 +202,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           
           {/* Status Indicators and Buttons */}
           <div className="flex items-center gap-2">
-            {isUpcomingHackathon && (
-              <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-                Upcoming
-              </span>
-            )}
-            {isActiveHackathon && (
-              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-600">
-                Active
-              </span>
-            )}
-            {isJudgingHackathon && (
-              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-600">
-                Judging
-              </span>
-            )}
-            {isPastHackathon && (
-              <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                Past
-              </span>
-            )}
-            
             {user && !isParticipant && isActiveHackathon && (
               <Button onClick={onJoinHackathon} disabled={isJoinHackathonPending}>
                 {isJoinHackathonPending ? 'Joining...' : 'Join Hackathon'}
@@ -178,6 +272,27 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Phase Change Confirmation Dialog */}
+      <AlertDialog open={isPhaseConfirmOpen} onOpenChange={setIsPhaseConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Hackathon Phase</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getConfirmationMessage()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmPhaseChange} 
+              disabled={updateHackathonPhase.isPending}
+            >
+              {updateHackathonPhase.isPending ? 'Updating...' : 'Confirm'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
