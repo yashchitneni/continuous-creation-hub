@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -29,7 +28,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
   const isJudgingHackathon = hackathon.status === 'judging';
   const isPastHackathon = hackathon.status === 'past';
   
-  // Sort projects by total score for judging and past hackathons
   let sortedProjects = [...projects];
   if (isJudgingHackathon || isPastHackathon) {
     sortedProjects.sort((a, b) => {
@@ -39,7 +37,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
     });
   }
   
-  // Find the winner (project with the most votes)
   const winnerProject = (isJudgingHackathon || isPastHackathon) && sortedProjects.length > 0 
     ? sortedProjects[0] 
     : null;
@@ -94,7 +91,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Winner Section - Only show for past or judging hackathons with projects */}
           {(isPastHackathon || isJudgingHackathon) && winnerProject && (
             <div className="mb-8">
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -114,7 +110,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
             </div>
           )}
           
-          {/* All Projects */}
           <div>
             <h3 className="text-xl font-semibold mb-4">
               {isPastHackathon ? 'All Submissions' : 'Current Submissions'}
@@ -122,7 +117,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedProjects.map((project, index) => (
-                // Skip showing the winner again in the grid
                 ((isPastHackathon || isJudgingHackathon) && index === 0) ? null : (
                   <ProjectCard
                     key={project.id}

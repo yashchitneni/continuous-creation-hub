@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -10,12 +10,46 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tag } from '@/components/ui/tag';
 import { Calendar, Link as LinkIcon, MapPin } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+// New hook to fetch user profile by ID
+const useUserProfile = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId
+  });
+};
 
 const Profile = () => {
+  const { id: profileId } = useParams();
   const { user, loading, signOut } = useAuth();
-  const { data: userProjects = [], isLoading: loadingProjects } = useUserProjects(user?.id);
   
-  if (loading) {
+  // If no profileId is provided in URL, use the current user's ID (for /profile route)
+  const targetUserId = profileId || user?.id;
+  
+  // Determine if we're viewing our own profile
+  const isOwnProfile = user?.id === targetUserId;
+  
+  // Fetch user profile data
+  const { data: profileData, isLoading: loadingProfile } = useUserProfile(targetUserId);
+  
+  // Fetch user projects
+  const { data: userProjects = [], isLoading: loadingProjects } = useUserProjects(targetUserId);
+  
+  if (loading || loadingProfile) {
     return (
       <PageLayout>
         <div className="min-h-screen flex items-center justify-center">
@@ -25,12 +59,30 @@ const Profile = () => {
     );
   }
   
-  if (!user) {
+  // If no profileId is provided (viewing /profile) and user is not logged in, redirect to auth
+  if (!profileId && !user) {
     return <Navigate to="/auth" replace />;
   }
   
-  // Get username from user metadata
-  const username = user.user_metadata?.username || user.email?.split('@')[0] || 'User';
+  // If profile not found
+  if (!profileData && !loading && !loadingProfile) {
+    return (
+      <PageLayout>
+        <div className="min-h-screen flex flex-col items-center justify-center">
+          <h1 className="text-3xl font-bold mb-4">Profile Not Found</h1>
+          <p className="text-muted-foreground mb-6">
+            We couldn't find the profile you're looking for.
+          </p>
+          <Button asChild>
+            <Link to="/hackathons">Browse Hackathons</Link>
+          </Button>
+        </div>
+      </PageLayout>
+    );
+  }
+  
+  // Get username from user metadata or profile data
+  const username = profileData?.username || 'User';
   
   return (
     <PageLayout>
@@ -45,7 +97,7 @@ const Profile = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative -mt-24">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <Avatar className="w-28 h-28 md:w-36 md:h-36 border-4 border-background rounded-full">
-              <AvatarImage src={user.user_metadata?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${username}`} alt={username} />
+              <AvatarImage src={profileData?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${username}`} alt={username} />
               <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             
@@ -53,12 +105,14 @@ const Profile = () => {
               <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
                 <div>
                   <h1 className="text-3xl font-bold">{username}</h1>
-                  <p className="text-muted-foreground">{user.email}</p>
+                  <p className="text-muted-foreground">{profileData?.email}</p>
                 </div>
                 
-                <Button variant="outline" onClick={() => signOut()}>
-                  Sign Out
-                </Button>
+                {isOwnProfile && (
+                  <Button variant="outline" onClick={() => signOut()}>
+                    Sign Out
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -70,7 +124,7 @@ const Profile = () => {
         <div className="max-w-7xl mx-auto">
           <Tabs defaultValue="projects" className="w-full">
             <TabsList className="mb-8">
-              <TabsTrigger value="projects">My Projects</TabsTrigger>
+              <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="hackathons">Hackathons Joined</TabsTrigger>
             </TabsList>
             
@@ -79,9 +133,15 @@ const Profile = () => {
                 <div className="text-center py-10">Loading projects...</div>
               ) : userProjects.length === 0 ? (
                 <div className="text-center py-10">
-                  <h2 className="text-xl font-semibold mb-4">You haven't submitted any projects yet</h2>
+                  <h2 className="text-xl font-semibold mb-4">
+                    {isOwnProfile 
+                      ? "You haven't submitted any projects yet" 
+                      : `${username} hasn't submitted any projects yet`}
+                  </h2>
                   <p className="text-muted-foreground mb-6">
-                    Join a hackathon and submit a project to showcase your skills
+                    {isOwnProfile 
+                      ? "Join a hackathon and submit a project to showcase your skills" 
+                      : "Check back later to see their submissions"}
                   </p>
                   <Button asChild>
                     <Link to="/hackathons">Browse Hackathons</Link>
@@ -112,7 +172,7 @@ const Profile = () => {
                         </div>
                         
                         <h3 className="text-xl font-bold mb-2 group-hover:text-jungle transition-colors">
-                          <Link to={`/hackathons/${project.hackathon_id}`}>
+                          <Link to={`/hackathons/${project.hackathon_id}/projects/${project.id}`}>
                             {project.title}
                           </Link>
                         </h3>

@@ -32,14 +32,8 @@ const App = () => (
               <Route path="/hackathons/:id" element={<HackathonDetail />} />
               <Route path="/hackathons/:hackathonId/projects/:projectId" element={<ProjectDetail />} />
               <Route path="/showcase" element={<Showcase />} />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/profile/:id" element={<Profile />} />
               <Route path="/about" element={<About />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
