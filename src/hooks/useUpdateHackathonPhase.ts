@@ -18,7 +18,7 @@ export const useUpdateHackathonPhase = () => {
         .from('hackathons')
         .update({ status })
         .eq('id', hackathonId)
-        .select()
+        .select('*')
         .single();
       
       if (error) throw error;
@@ -35,6 +35,7 @@ export const useUpdateHackathonPhase = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Error updating hackathon phase:', error);
       toast({
         title: 'Error updating hackathon phase',
         description: error.message || 'An error occurred while updating the hackathon phase.',

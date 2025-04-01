@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tag } from '@/components/ui/tag';
 
 interface HackathonHeaderProps {
   hackathon: any;
@@ -108,12 +110,16 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   const confirmPhaseChange = async () => {
     if (!targetPhase) return;
     
-    await updateHackathonPhase.mutateAsync({
-      hackathonId: hackathon.id,
-      status: targetPhase
-    });
-    
-    setIsPhaseConfirmOpen(false);
+    try {
+      await updateHackathonPhase.mutateAsync({
+        hackathonId: hackathon.id,
+        status: targetPhase
+      });
+      
+      setIsPhaseConfirmOpen(false);
+    } catch (error) {
+      console.error('Error confirming phase change:', error);
+    }
   };
 
   return (
@@ -140,6 +146,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Change Hackathon Phase</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {!isUpcomingHackathon && (
                   <DropdownMenuItem 
                     onClick={() => handlePhaseChange('upcoming')}

@@ -116,7 +116,6 @@ const HackathonDetail = () => {
             </Button>
           </div>
           
-          {/* Hackathon Header Component */}
           <HackathonHeader 
             hackathon={typedHackathon}
             participantCount={participantCount}
@@ -129,7 +128,6 @@ const HackathonDetail = () => {
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
           />
           
-          {/* Participants button */}
           <div className="mt-4 mb-8">
             <Button 
               variant="outline" 
@@ -141,7 +139,6 @@ const HackathonDetail = () => {
             </Button>
           </div>
           
-          {/* Projects List Component */}
           <ProjectsList 
             projects={projects}
             hackathon={typedHackathon}
@@ -152,7 +149,6 @@ const HackathonDetail = () => {
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
           />
           
-          {/* Submit Project Dialog */}
           {user && (
             <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
               <DialogContent className="sm:max-w-[700px]">
@@ -171,7 +167,6 @@ const HackathonDetail = () => {
             </Dialog>
           )}
           
-          {/* Participants Dialog */}
           <ParticipantsDialog 
             open={isParticipantsDialogOpen}
             onOpenChange={setIsParticipantsDialogOpen}
@@ -179,7 +174,6 @@ const HackathonDetail = () => {
             isLoading={loadingParticipants}
           />
           
-          {/* Delete Hackathon Dialog */}
           {isCreator && (
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <DialogContent className="sm:max-w-[500px]">
