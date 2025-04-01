@@ -10,6 +10,16 @@ export const markdownToHtml = (markdown: string): string => {
     .replace(/\n#{1,6} /g, match => match.replace(/\n/, '\n\n'))
     .replace(/\n- /g, '\n\n- ');
 
+  // Configure marked options for better styling
+  marked.setOptions({
+    breaks: true,        // Add <br> on single line breaks
+    gfm: true,           // Enable GitHub Flavored Markdown
+    headerIds: true,     // Enable header IDs for linking
+    mangle: false,       // Don't mangle header IDs
+    smartLists: true,    // Use smarter list behavior
+    smartypants: true,   // Use "smart" typographic punctuation
+  });
+
   // Convert markdown to HTML
   const rawHtml = marked(cleanedMarkdown);
   

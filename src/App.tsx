@@ -17,6 +17,7 @@ import Showcase from "./pages/Showcase";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import ResourceDetail from "./pages/ResourceDetail";
+import Resources from "./pages/Resources";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/profile/:id" element={<Profile />} />
               <Route path="/about" element={<About />} />
+              <Route path="/resources" element={<Resources />} />
               <Route path="/resources/:slug" element={<ResourceDetail />} />
               <Route path="/terms" element={<ResourceDetail />} />
               <Route path="/privacy" element={<ResourceDetail />} />
