@@ -41,26 +41,36 @@ export const useUpdateHackathonPhase = () => {
       
       console.log('Current status:', existingHackathon.status, 'New status:', status);
       
-      // Update the hackathon without using .single()
-      // This is the key change - we're doing a direct update by ID without expecting
-      // exactly one row to be returned in the response
-      const { data, error } = await supabase
+      // CRITICAL CHANGE: Just perform the update without expecting any data return
+      // We'll fetch the updated record separately after the update is successful
+      const { error: updateError } = await supabase
         .from('hackathons')
         .update({ status })
+        .eq('id', hackathonId);
+      
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw new Error(`Failed to update hackathon phase: ${updateError.message}`);
+      }
+      
+      // Now fetch the updated hackathon data
+      const { data: updatedHackathon, error: refetchError } = await supabase
+        .from('hackathons')
+        .select('*')
         .eq('id', hackathonId)
-        .select('*');
-      
-      if (error) {
-        console.error('Update error:', error);
-        throw new Error(`Failed to update hackathon phase: ${error.message}`);
+        .maybeSingle();
+        
+      if (refetchError) {
+        console.error('Error refetching hackathon:', refetchError);
+        throw new Error(`Failed to retrieve updated hackathon: ${refetchError.message}`);
       }
       
-      if (!data || data.length === 0) {
-        throw new Error('No data returned after update');
+      if (!updatedHackathon) {
+        throw new Error('Could not retrieve the updated hackathon');
       }
       
-      console.log('Update successful:', data[0]);
-      return data[0];
+      console.log('Update successful:', updatedHackathon);
+      return updatedHackathon;
     },
     onSuccess: (data) => {
       // Invalidate relevant queries
