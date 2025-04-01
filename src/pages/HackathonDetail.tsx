@@ -13,8 +13,8 @@ import {
 } from '@/hooks/useHackathons';
 import { useHackathonProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import HackathonHeader from '@/components/hackathon/HackathonHeader';
 import ProjectsList from '@/components/hackathon/ProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
@@ -24,6 +24,7 @@ const HackathonDetail = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { data: hackathon, isLoading: loadingHackathon } = useHackathon(id);
   const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
@@ -72,6 +73,7 @@ const HackathonDetail = () => {
     
     try {
       await deleteHackathon.mutateAsync(hackathon.id);
+      setIsDeleteDialogOpen(false);
       navigate('/hackathons');
     } catch (error) {
       console.error('Error deleting hackathon:', error);
@@ -83,6 +85,8 @@ const HackathonDetail = () => {
     ...hackathon,
     status: hackathon.status as HackathonStatus
   };
+  
+  const isCreator = user?.id === hackathon.creator_id;
   
   return (
     <PageLayout>
@@ -104,7 +108,7 @@ const HackathonDetail = () => {
             isParticipant={isParticipant}
             user={user}
             onJoinHackathon={handleJoinHackathon}
-            onDeleteHackathon={handleDeleteHackathon}
+            onDeleteHackathon={() => setIsDeleteDialogOpen(true)}
             isJoinHackathonPending={joinHackathon.isPending}
             isSubmitDialogOpen={isSubmitDialogOpen}
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
@@ -136,6 +140,32 @@ const HackathonDetail = () => {
                   userId={user.id}
                   onClose={() => setIsSubmitDialogOpen(false)} 
                 />
+              </DialogContent>
+            </Dialog>
+          )}
+          
+          {/* Delete Hackathon Dialog */}
+          {isCreator && (
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Delete Hackathon</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete this hackathon? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="mt-6">
+                  <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDeleteHackathon}
+                    disabled={deleteHackathon.isPending}
+                  >
+                    {deleteHackathon.isPending ? 'Deleting...' : 'Delete Hackathon'}
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           )}

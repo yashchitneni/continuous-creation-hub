@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tag } from '@/components/ui/tag';
-import { Calendar, Link as LinkIcon, MapPin } from 'lucide-react';
+import { Calendar, Link as LinkIcon, MapPin, Edit } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,6 +33,28 @@ const useUserProfile = (userId: string | undefined) => {
   });
 };
 
+// New hook to fetch user's hackathons
+const useUserHackathons = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['userHackathons', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data, error } = await supabase
+        .from('hackathon_participants')
+        .select(`
+          hackathon_id,
+          hackathons:hackathons(*)
+        `)
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      return data?.map(item => item.hackathons) || [];
+    },
+    enabled: !!userId
+  });
+};
+
 const Profile = () => {
   const { id: profileId } = useParams();
   const { user, loading, signOut } = useAuth();
@@ -48,6 +70,9 @@ const Profile = () => {
   
   // Fetch user projects
   const { data: userProjects = [], isLoading: loadingProjects } = useUserProjects(targetUserId);
+  
+  // Fetch user's hackathons
+  const { data: userHackathons = [], isLoading: loadingHackathons } = useUserHackathons(targetUserId);
   
   if (loading || loadingProfile) {
     return (
@@ -109,9 +134,15 @@ const Profile = () => {
                 </div>
                 
                 {isOwnProfile && (
-                  <Button variant="outline" onClick={() => signOut()}>
-                    Sign Out
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button variant="outline">
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </Button>
+                    <Button variant="outline" onClick={() => signOut()}>
+                      Sign Out
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -158,7 +189,7 @@ const Profile = () => {
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute top-2 right-2 z-10 bg-muted/80 backdrop-blur-sm text-xs py-1 px-2 rounded-full">
-                          {project.hackathon.status}
+                          {project.hackathon?.status}
                         </div>
                       </div>
                       
@@ -183,7 +214,7 @@ const Profile = () => {
                         
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Link to={`/hackathons/${project.hackathon_id}`} className="text-jungle hover:underline">
-                            {project.hackathon.title}
+                            {project.hackathon?.title}
                           </Link>
                         </div>
                       </div>
@@ -194,15 +225,60 @@ const Profile = () => {
             </TabsContent>
             
             <TabsContent value="hackathons" className="space-y-6">
-              <div className="text-center py-10">
-                <h2 className="text-xl font-semibold mb-4">Hackathon participation list coming soon</h2>
-                <p className="text-muted-foreground mb-6">
-                  We're working on this feature! Check back later.
-                </p>
-                <Button asChild>
-                  <Link to="/hackathons">Browse Hackathons</Link>
-                </Button>
-              </div>
+              {loadingHackathons ? (
+                <div className="text-center py-10">Loading hackathons...</div>
+              ) : userHackathons.length === 0 ? (
+                <div className="text-center py-10">
+                  <h2 className="text-xl font-semibold mb-4">
+                    {isOwnProfile 
+                      ? "You haven't joined any hackathons yet" 
+                      : `${username} hasn't joined any hackathons yet`}
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    {isOwnProfile 
+                      ? "Join a hackathon to showcase your skills and connect with other developers" 
+                      : "Check back later to see their hackathon participation"}
+                  </p>
+                  <Button asChild>
+                    <Link to="/hackathons">Browse Hackathons</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userHackathons.map((hackathon: any) => (
+                    <div key={hackathon.id} className="glassmorphism rounded-xl p-6 hover-scale group">
+                      <div className="flex flex-col h-full">
+                        <h3 className="text-xl font-bold mb-2 group-hover:text-jungle transition-colors">
+                          <Link to={`/hackathons/${hackathon.id}`} className="block">
+                            {hackathon.title}
+                          </Link>
+                        </h3>
+                        
+                        <p className="text-muted-foreground line-clamp-2 mb-4">
+                          {hackathon.description}
+                        </p>
+                        
+                        <div className="mt-auto">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              <span>
+                                {format(new Date(hackathon.start_date), 'MMM d')} - {format(new Date(hackathon.end_date), 'MMM d, yyyy')}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <Link to={`/hackathons/${hackathon.id}`}>
+                            <Button className="w-full">
+                              View Details
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
