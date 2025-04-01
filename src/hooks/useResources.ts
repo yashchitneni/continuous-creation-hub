@@ -19,7 +19,7 @@ export const useResource = (slug: string | undefined) => {
       
       const { data, error } = await supabase
         .from('resources')
-        .select('*')
+        .select()
         .eq('slug', slug)
         .single();
         
@@ -36,7 +36,7 @@ export const useResources = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('resources')
-        .select('*')
+        .select()
         .order('title');
         
       if (error) throw error;

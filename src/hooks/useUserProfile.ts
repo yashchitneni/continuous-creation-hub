@@ -19,7 +19,7 @@ export const useUserProfile = (userId: string | undefined) => {
       // First try the public users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('*')
+        .select()
         .eq('id', userId)
         .single();
           

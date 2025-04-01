@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -110,7 +111,7 @@ export const useHackathonParticipants = (hackathonId?: string) => {
         .select(`
           *,
           users:user_id (
-            id, email, username, avatar_url
+            id, email, username, avatar_url, created_at
           )
         `)
         .eq('hackathon_id', hackathonId);
@@ -121,8 +122,12 @@ export const useHackathonParticipants = (hackathonId?: string) => {
       return data?.map(participant => {
         // Create a formatted date string or a fallback
         let joinedDate = 'Unknown date';
-        if (participant.created_at && isValid(new Date(participant.created_at))) {
-          joinedDate = format(new Date(participant.created_at), 'MMM d, yyyy');
+        
+        // Use the user's created_at date as fallback
+        const dateToFormat = participant.users?.created_at;
+        
+        if (dateToFormat && isValid(new Date(dateToFormat))) {
+          joinedDate = format(new Date(dateToFormat), 'MMM d, yyyy');
         }
         
         return {
