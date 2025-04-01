@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -39,14 +38,12 @@ export const useHackathonProjects = (hackathonId?: string) => {
       
       if (error) throw error;
       
-      // Transform data to include vote count
       const projectsWithVotes = data.map(project => ({
         ...project,
         vote_count: Array.isArray(project.votes) ? project.votes.length : 0,
-        votes: undefined // Remove the nested votes array
+        votes: undefined
       }));
       
-      // Sort by vote count in descending order
       return projectsWithVotes.sort((a, b) => b.vote_count - a.vote_count);
     },
     enabled: !!hackathonId
@@ -226,7 +223,6 @@ export const useVoteForProject = () => {
       styleScore: number, 
       functionScore: number 
     }) => {
-      // First check if the hackathon is in judging phase
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('hackathon_id')
@@ -247,7 +243,6 @@ export const useVoteForProject = () => {
         throw new Error('Voting is only allowed during the judging phase');
       }
       
-      // Check if user is a participant
       const { data: participant, error: participantError } = await supabase
         .from('hackathon_participants')
         .select('*')
@@ -261,7 +256,6 @@ export const useVoteForProject = () => {
         throw new Error('Only hackathon participants can vote');
       }
       
-      // Insert or update vote
       const { data, error } = await supabase
         .from('votes')
         .upsert([{ 
@@ -279,16 +273,13 @@ export const useVoteForProject = () => {
       return { ...data, hackathon_id: project.hackathon_id };
     },
     onSuccess: (data) => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['votes', 'check', data.project_id, data.user_id] });
       queryClient.invalidateQueries({ queryKey: ['votes', 'get', data.project_id, data.user_id] });
       queryClient.invalidateQueries({ queryKey: ['projects', 'scores', data.project_id] });
       
-      // Check if hackathon_id exists before invalidating queries
       if ('hackathon_id' in data) {
         queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon', data.hackathon_id] });
       } else {
-        // Alternatively, invalidate all hackathon project queries
         queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon'] });
       }
       
@@ -304,5 +295,48 @@ export const useVoteForProject = () => {
         variant: 'destructive',
       });
     }
+  });
+};
+
+// Fetch all projects across all hackathons
+export const useAllProjects = () => {
+  return useQuery({
+    queryKey: ['projects', 'all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          user:users(id, username, avatar_url),
+          hackathon:hackathons(id, title, status)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return data || [];
+    }
+  });
+};
+
+// Fetch hackathon participants with user details
+export const useHackathonParticipants = (hackathonId?: string) => {
+  return useQuery({
+    queryKey: ['hackathonParticipants', hackathonId],
+    queryFn: async () => {
+      if (!hackathonId) return [];
+      
+      const { data, error } = await supabase
+        .from('hackathon_participants')
+        .select(`
+          user_id,
+          users(id, username, avatar_url)
+        `)
+        .eq('hackathon_id', hackathonId);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!hackathonId
   });
 };

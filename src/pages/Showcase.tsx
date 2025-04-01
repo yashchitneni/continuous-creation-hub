@@ -6,91 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tag } from '@/components/ui/tag';
 import { Search, SlidersHorizontal, Star, TrendingUp, Clock } from 'lucide-react';
+import { useAllProjects } from '@/hooks/useProjects';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
 
 const Showcase = () => {
   const [activeFilter, setActiveFilter] = useState<string>('trending');
-
-  // Mock data for showcase hacks
-  const hacks = [
-    {
-      id: "1",
-      title: "AI-Powered Task Management System",
-      description: "A revolutionary task management platform that uses machine learning to prioritize and schedule your work based on your habits and peak productivity hours.",
-      imageUrl: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      tags: ["AI", "Productivity", "Web App"],
-      author: {
-        name: "Alex Johnson",
-        avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
-      },
-      likes: 126,
-      comments: 42
-    },
-    {
-      id: "2",
-      title: "Voice-Controlled Smart Home Dashboard",
-      description: "Control your entire smart home with natural voice commands. Integrates with popular smart home platforms and provides a beautiful visualization of your devices.",
-      imageUrl: "https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      tags: ["IoT", "Voice AI", "Dashboard"],
-      author: {
-        name: "Sophia Chen",
-        avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1061&q=80"
-      },
-      likes: 86,
-      comments: 23
-    },
-    {
-      id: "3",
-      title: "Sustainable Fashion Finder",
-      description: "An app that helps shoppers find sustainable fashion brands and secondhand alternatives to fast fashion, including environmental impact ratings.",
-      imageUrl: "https://images.unsplash.com/photo-1542060748-10c28b62716f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      tags: ["Sustainability", "E-commerce", "Mobile App"],
-      author: {
-        name: "Marco Rivera",
-        avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80"
-      },
-      likes: 72,
-      comments: 18
-    },
-    {
-      id: "4",
-      title: "Collaborative Music Creation Platform",
-      description: "A platform where musicians can collaborate in real-time to create, edit, and mix music tracks together regardless of their physical location.",
-      imageUrl: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      tags: ["Music", "Collaboration", "Real-time"],
-      author: {
-        name: "Jamal Foster",
-        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80"
-      },
-      likes: 94,
-      comments: 31
-    },
-    {
-      id: "5",
-      title: "AR Language Learning Experience",
-      description: "An augmented reality app that helps users learn languages by overlaying translations and pronunciation guides on real-world objects.",
-      imageUrl: "https://images.unsplash.com/photo-1596496181848-3091d4878b24?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
-      tags: ["AR", "Education", "Mobile App"],
-      author: {
-        name: "Nina Patel",
-        avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=987&q=80"
-      },
-      likes: 65,
-      comments: 14
-    },
-    {
-      id: "6",
-      title: "Mental Health Journaling App",
-      description: "A privacy-focused journaling app that uses sentiment analysis to track mood patterns and provide personalized mental wellness insights.",
-      imageUrl: "https://images.unsplash.com/photo-1501621667575-af81f1f0bacc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      tags: ["Mental Health", "Privacy", "AI"],
-      author: {
-        name: "Jordan Lee",
-        avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=987&q=80"
-      },
-      likes: 112,
-      comments: 37
-    },
-  ];
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { data: projects = [], isLoading, isError } = useAllProjects();
 
   // Available technology tags for filtering
   const techTags = [
@@ -128,7 +57,11 @@ const Showcase = () => {
                 />
               </div>
               
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => setIsFilterOpen(true)}
+              >
                 <SlidersHorizontal size={16} />
                 Advanced Filters
               </Button>
@@ -202,20 +135,97 @@ const Showcase = () => {
           </div>
           
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hacks.map((hack) => (
-              <HackCard key={hack.id} {...hack} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">Loading projects...</p>
+            </div>
+          ) : isError ? (
+            <div className="text-center py-16">
+              <p className="text-destructive">Error loading projects. Please try again later.</p>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">No projects to display.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project) => (
+                <HackCard 
+                  key={project.id} 
+                  id={project.id}
+                  title={project.title}
+                  description={project.description}
+                  imageUrl={project.image_url}
+                  tags={project.tags}
+                  author={{
+                    name: project.user?.username || 'Anonymous',
+                    avatarUrl: project.user?.avatar_url || ''
+                  }}
+                  likes={0} // We can add this later
+                  comments={0} // We can add this later
+                />
+              ))}
+            </div>
+          )}
           
           {/* Load More Button */}
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Load More Projects
-            </Button>
-          </div>
+          {projects.length > 0 && (
+            <div className="text-center mt-12">
+              <Button variant="outline" size="lg">
+                Load More Projects
+              </Button>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Advanced Filter Dialog */}
+      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Advanced Filters</DialogTitle>
+            <DialogDescription>
+              Select your filtering options to narrow down the projects.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Hackathon Status</h3>
+              <div className="flex flex-wrap gap-2">
+                <Tag variant="outline" size="sm" className="cursor-pointer hover:bg-muted/50">Active</Tag>
+                <Tag variant="outline" size="sm" className="cursor-pointer hover:bg-muted/50">Completed</Tag>
+                <Tag variant="outline" size="sm" className="cursor-pointer hover:bg-muted/50">Any</Tag>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Project Tags</h3>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                {techTags.map((tag, index) => (
+                  <Tag key={index} variant="outline" size="sm" className="cursor-pointer hover:bg-muted/50">
+                    {tag}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Date Range</h3>
+              <div className="flex items-center gap-2">
+                <Input type="date" className="w-full" />
+                <span>to</span>
+                <Input type="date" className="w-full" />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFilterOpen(false)}>Cancel</Button>
+            <Button onClick={() => setIsFilterOpen(false)}>Apply Filters</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };
