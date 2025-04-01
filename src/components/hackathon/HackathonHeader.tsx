@@ -1,7 +1,15 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Calendar, Users, MoreVertical, Edit, Trash2, PlusCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +17,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { useHackathonParticipants } from '@/hooks/useHackathons';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface HackathonHeaderProps {
   hackathon: any;
@@ -34,6 +44,9 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   isSubmitDialogOpen,
   setIsSubmitDialogOpen
 }) => {
+  const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = useState(false);
+  const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(hackathon.id);
+  
   const isUpcomingHackathon = hackathon.status === 'upcoming';
   const isActiveHackathon = hackathon.status === 'active';
   const isJudgingHackathon = hackathon.status === 'judging';
@@ -116,11 +129,55 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           <Calendar className="w-4 h-4" />
           <span>{new Date(hackathon.start_date).toLocaleDateString()} - {new Date(hackathon.end_date).toLocaleDateString()}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <button 
+          className="flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer" 
+          onClick={() => setIsParticipantsDialogOpen(true)}
+        >
           <Users className="w-4 h-4" />
           <span>{participantCount} Participants</span>
-        </div>
+        </button>
       </div>
+
+      {/* Participants Dialog */}
+      <Dialog open={isParticipantsDialogOpen} onOpenChange={setIsParticipantsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Hackathon Participants</DialogTitle>
+            <DialogDescription>
+              These are the participants currently joined in the hackathon.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingParticipants ? (
+            <div className="py-4 text-center">Loading participants...</div>
+          ) : participants.length === 0 ? (
+            <div className="py-4 text-center">No participants yet.</div>
+          ) : (
+            <div className="py-4">
+              <div className="space-y-4">
+                {participants.map((participant: any) => (
+                  <Link 
+                    key={participant.user_id} 
+                    to={`/profile/${participant.users?.username || participant.user_id}`}
+                    className="flex items-center gap-3 p-2 hover:bg-muted rounded-md transition-colors"
+                  >
+                    <Avatar>
+                      <AvatarImage src={participant.users?.avatar_url} />
+                      <AvatarFallback>
+                        {participant.users?.username?.slice(0, 2).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{participant.users?.username || 'Anonymous'}</div>
+                      <div className="text-sm text-muted-foreground">Joined {new Date(participant.created_at).toLocaleDateString()}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

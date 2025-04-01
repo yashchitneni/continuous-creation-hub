@@ -4,9 +4,18 @@ import { Link } from 'react-router-dom';
 import { Twitter, Github, Linkedin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Subscribed to newsletter",
+      description: "Thank you for subscribing to our newsletter!",
+    });
+  };
   
   return (
     <footer className="w-full bg-card/50 py-12 px-6 mt-20">
@@ -27,13 +36,13 @@ const Footer = () => {
               through mini-hackathons and project showcases.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-muted-foreground hover:text-jungle transition-colors">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-jungle transition-colors">
                 <Twitter size={18} />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-jungle transition-colors">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-jungle transition-colors">
                 <Github size={18} />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-jungle transition-colors">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-jungle transition-colors">
                 <Linkedin size={18} />
               </a>
             </div>
@@ -59,16 +68,16 @@ const Footer = () => {
           <div className="space-y-6">
             <h4 className="font-medium text-foreground">Resources</h4>
             <div className="space-y-3">
-              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/about#how-it-works" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 How It Works
               </Link>
-              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/hackathons" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Submission Guidelines
               </Link>
-              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/showcase" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Voting System
               </Link>
-              <Link to="#" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
+              <Link to="/about#privacy" className="block text-sm text-muted-foreground hover:text-jungle transition-colors">
                 Privacy Policy
               </Link>
             </div>
@@ -80,25 +89,26 @@ const Footer = () => {
             <p className="text-sm text-muted-foreground">
               Subscribe to our newsletter for the latest hackathons and community updates.
             </p>
-            <div className="flex items-center space-x-2">
+            <form className="flex items-center space-x-2" onSubmit={handleNewsletterSubmit}>
               <Input
                 type="email"
                 placeholder="Your email"
                 className="bg-muted border-none h-10"
+                required
               />
-              <Button size="sm" className="h-10 bg-jungle hover:bg-jungle/80">
+              <Button type="submit" size="sm" className="h-10 bg-jungle hover:bg-jungle/80">
                 <ArrowRight size={16} />
               </Button>
-            </div>
+            </form>
           </div>
         </div>
 
         <div className="border-t border-border mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
           <p>© {currentYear} Just Keep Building. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-jungle transition-colors">Terms</a>
-            <a href="#" className="hover:text-jungle transition-colors">Privacy</a>
-            <a href="#" className="hover:text-jungle transition-colors">Cookies</a>
+            <Link to="/about#terms" className="hover:text-jungle transition-colors">Terms</Link>
+            <Link to="/about#privacy" className="hover:text-jungle transition-colors">Privacy</Link>
+            <Link to="/about#cookies" className="hover:text-jungle transition-colors">Cookies</Link>
           </div>
         </div>
       </div>

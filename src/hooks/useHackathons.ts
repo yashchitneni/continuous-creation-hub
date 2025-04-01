@@ -128,6 +128,18 @@ export const useJoinHackathon = () => {
   
   return useMutation({
     mutationFn: async ({ hackathonId, userId }: { hackathonId: string; userId: string }) => {
+      // First check if already a participant
+      const { data: existingParticipant } = await supabase
+        .from('hackathon_participants')
+        .select('*')
+        .eq('hackathon_id', hackathonId)
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+      if (existingParticipant) {
+        throw new Error('You have already joined this hackathon');
+      }
+      
       const { data, error } = await supabase
         .from('hackathon_participants')
         .insert([{ hackathon_id: hackathonId, user_id: userId }])

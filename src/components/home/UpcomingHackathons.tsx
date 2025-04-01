@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Clock, Calendar, Users } from 'lucide-react';
+import { ArrowRight, Clock, Calendar, Users, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { useIsHackathonParticipant, useJoinHackathon } from '@/hooks/useHackathons';
 
 interface HackathonCardProps {
   id: string;
@@ -27,6 +29,16 @@ const HackathonCard = ({
   className,
   accentColor,
 }: HackathonCardProps) => {
+  const { user } = useAuth();
+  const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
+  const joinHackathon = useJoinHackathon();
+  
+  const handleJoin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    await joinHackathon.mutateAsync({ hackathonId: id, userId: user.id });
+  };
+  
   return (
     <Card 
       className={cn(
@@ -56,9 +68,22 @@ const HackathonCard = ({
             <span>{participants} participants</span>
           </div>
           
-          <Button asChild variant="outline" className="w-full mt-4">
-            <Link to={`/hackathons/${id}`}>View Details</Link>
-          </Button>
+          <div className="flex flex-col gap-2 mt-4">
+            <Button asChild variant="outline" className="w-full">
+              <Link to={`/hackathons/${id}`}>View Details</Link>
+            </Button>
+            
+            {user && !isParticipant ? (
+              <Button onClick={handleJoin} disabled={joinHackathon.isPending} className="w-full">
+                {joinHackathon.isPending ? 'Joining...' : 'Join Hackathon'}
+              </Button>
+            ) : user && isParticipant ? (
+              <div className="w-full py-2 flex justify-center items-center text-sm text-muted-foreground">
+                <Check className="h-4 w-4 mr-1 text-green-500" /> 
+                You've joined this hackathon
+              </div>
+            ) : null}
+          </div>
         </div>
       </CardContent>
     </Card>

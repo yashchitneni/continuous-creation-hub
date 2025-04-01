@@ -4,14 +4,15 @@ import { Link } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
 import HeroSection from '@/components/home/HeroSection';
 import { useAuth } from '@/context/AuthContext';
-import { useHackathons, useJoinHackathon } from '@/hooks/useHackathons';
+import { useHackathons, useJoinHackathon, useIsHackathonParticipant } from '@/hooks/useHackathons';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Calendar, ArrowRight, Users } from 'lucide-react';
+import { Calendar, ArrowRight, Users, Check } from 'lucide-react';
 
 const UpcomingHackathonCard = ({ hackathon }: { hackathon: any }) => {
   const { user } = useAuth();
   const joinHackathon = useJoinHackathon();
+  const { data: isParticipant = false } = useIsHackathonParticipant(hackathon.id, user?.id);
   
   const handleJoin = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -40,17 +41,22 @@ const UpcomingHackathonCard = ({ hackathon }: { hackathon: any }) => {
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3 mt-auto">
         <Button asChild>
           <Link to={`/hackathons/${hackathon.id}`}>
             View Details
           </Link>
         </Button>
         
-        {user ? (
+        {user && !isParticipant ? (
           <Button variant="outline" onClick={handleJoin} disabled={joinHackathon.isPending}>
             {joinHackathon.isPending ? 'Joining...' : 'Join Hackathon'}
           </Button>
+        ) : user && isParticipant ? (
+          <div className="w-full py-2 flex justify-center items-center text-sm text-muted-foreground">
+            <Check className="h-4 w-4 mr-1 text-green-500" /> 
+            You've joined this hackathon
+          </div>
         ) : null}
       </div>
     </div>
