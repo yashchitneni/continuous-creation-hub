@@ -77,9 +77,9 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
       case 'upcoming':
         return 'secondary';
       case 'active':
-        return 'default';
+        return 'default'; // Using default instead of success
       case 'judging':
-        return 'destructive';
+        return 'destructive'; // Using destructive instead of warning
       case 'past':
         return 'outline';
       default:

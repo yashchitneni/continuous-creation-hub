@@ -14,14 +14,33 @@ export const useUpdateHackathonPhase = () => {
   
   return useMutation({
     mutationFn: async ({ hackathonId, status }: UpdateHackathonPhaseParams) => {
+      // First fetch the current hackathon to make sure it exists
+      const { data: hackathon, error: fetchError } = await supabase
+        .from('hackathons')
+        .select('*')
+        .eq('id', hackathonId)
+        .single();
+      
+      if (fetchError) {
+        throw new Error(`Failed to find hackathon: ${fetchError.message}`);
+      }
+      
+      // Then update it
       const { data, error } = await supabase
         .from('hackathons')
         .update({ status })
         .eq('id', hackathonId)
-        .select('*')
-        .single();
+        .select()
+        .maybeSingle(); // Using maybeSingle() instead of single() to handle cases where the row might not be found
       
-      if (error) throw error;
+      if (error) {
+        throw new Error(`Failed to update hackathon: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('No hackathon was updated');
+      }
+      
       return data;
     },
     onSuccess: (data) => {

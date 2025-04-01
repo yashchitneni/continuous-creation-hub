@@ -36,9 +36,9 @@ const HackathonCard = ({ hackathon, isHomePage = false }: HackathonCardProps) =>
       case 'upcoming':
         return 'secondary';
       case 'active':
-        return 'default'; // Changed from 'success' to 'default'
+        return 'default'; // Using default instead of success
       case 'judging':
-        return 'destructive'; // Changed from 'warning' to 'destructive'
+        return 'destructive'; // Using destructive instead of warning
       case 'past':
         return 'outline';
       default:
