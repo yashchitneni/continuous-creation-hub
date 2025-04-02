@@ -23,7 +23,7 @@ export const useUpdateHackathonPhase = () => {
   
   return useMutation({
     mutationFn: async ({ hackathonId, status }: UpdateHackathonPhaseParams) => {
-      console.log('Updating hackathon phase:', { hackathonId, status });
+      console.log('Starting mutation for hackathonId:', hackathonId, 'to status:', status);
       
       // First, verify the hackathon exists
       const { data: existingHackathon, error: fetchError } = await supabase

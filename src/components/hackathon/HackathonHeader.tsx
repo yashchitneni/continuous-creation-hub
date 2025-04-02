@@ -67,10 +67,8 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(hackathon.id);
   const updateHackathonPhase = useUpdateHackathonPhase();
   
-  // Store current hackathon status for debugging
   const [currentStatus, setCurrentStatus] = useState<string>(hackathon.status);
   
-  // Update our local status tracking when hackathon prop changes
   useEffect(() => {
     if (hackathon?.status !== currentStatus) {
       console.log(`HackathonHeader: Status changed from ${currentStatus} to ${hackathon.status}`);
@@ -78,7 +76,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     }
   }, [hackathon, currentStatus]);
   
-  // Reset the confirm dialog and target phase when mutation completes
   useEffect(() => {
     if (!updateHackathonPhase.isPending && !updateHackathonPhase.isError && isPhaseConfirmOpen) {
       setIsPhaseConfirmOpen(false);
@@ -86,7 +83,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     }
   }, [updateHackathonPhase.isPending, updateHackathonPhase.isError, isPhaseConfirmOpen]);
   
-  // Log the hackathon object every time it changes
   useEffect(() => {
     console.log("HackathonHeader received hackathon:", hackathon);
   }, [hackathon]);
@@ -155,7 +151,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     console.log("From current phase:", hackathon.status);
     
     try {
-      // Make sure we have a valid hackathon ID
       if (!hackathon.id) {
         console.error("Missing hackathon ID");
         toast({
@@ -173,11 +168,9 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
       
     } catch (error) {
       console.error('Error confirming phase change:', error);
-      // The error will be handled by the mutation's onError callback
     }
   };
 
-  // Only render the Manage Phase button if the user is the creator
   const renderManagePhaseButton = () => {
     if (!isCreator) {
       console.log("Not rendering Manage Phase button because user is not creator");
@@ -355,12 +348,13 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <Button 
               onClick={confirmPhaseChange} 
               disabled={updateHackathonPhase.isPending}
+              className={updateHackathonPhase.isPending ? "opacity-70" : ""}
             >
               {updateHackathonPhase.isPending ? 'Updating...' : 'Confirm'}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
