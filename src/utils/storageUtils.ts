@@ -5,6 +5,21 @@ import { toast } from "@/hooks/use-toast";
 const BUCKET_NAME = "project-images";
 
 /**
+ * Generate a unique file path by appending a timestamp and random string
+ * @param fileName The original file name
+ * @param path Optional base path
+ * @returns A unique file path
+ */
+const generateUniqueFilePath = (fileName: string, path?: string): string => {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 8); // Generate a 6-character random string
+  const cleanFileName = fileName.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+  const uniqueFileName = `${timestamp}_${randomString}_${cleanFileName}`;
+  
+  return path ? `${path}/${uniqueFileName}` : uniqueFileName;
+};
+
+/**
  * Upload an image to Supabase storage
  * @param file The file to upload
  * @param path Optional path within the bucket
@@ -12,8 +27,8 @@ const BUCKET_NAME = "project-images";
  */
 export const uploadImage = async (file: File, path?: string): Promise<string | null> => {
   try {
-    // Create a unique file path if not provided
-    const filePath = path || `${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+    // Generate a unique file path to avoid conflicts
+    const filePath = generateUniqueFilePath(file.name, path);
     
     // Upload the file
     const { data, error } = await supabase.storage
