@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Trash2, Users } from 'lucide-react';
 import HackathonHeader from '@/components/hackathon/HackathonHeader';
-import ProjectsList from '@/components/hackathon/ProjectsList';
+import ModifiedProjectsList from '@/components/hackathon/ModifiedProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
 import ParticipantsDialog from '@/components/hackathon/ParticipantsDialog';
 import { toast } from '@/hooks/use-toast';
@@ -182,7 +182,7 @@ const HackathonDetail = () => {
             </Button>
           </div>
           
-          <ProjectsList 
+          <ModifiedProjectsList 
             projects={projects}
             hackathon={typedHackathon}
             isParticipant={isParticipant}

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Use the exact same type as in useHackathons.ts but without the 'all' option
 export type HackathonStatus = 'upcoming' | 'active' | 'judging' | 'past';
 
 interface UpdateHackathonPhaseParams {
@@ -77,7 +78,7 @@ export const useUpdateHackathonPhase = () => {
           }
         }
         
-        // Update the hackathon status - we'll use RPC to ensure this is handled properly at the database level
+        // Update the hackathon status - use the RPC function for safer updates
         const { data, error: updateError } = await supabase.rpc('update_hackathon_status', {
           p_hackathon_id: hackathonId,
           p_status: status

@@ -233,7 +233,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_hackathon_status: {
+        Args: {
+          p_hackathon_id: string
+          p_status: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

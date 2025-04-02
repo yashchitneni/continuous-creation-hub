@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Upload, X, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,10 +25,17 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(defaultImageUrl || null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadStarted, setUploadStarted] = useState(false);
   
   const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    // Prevent duplicate upload attempts
+    if (isUploading || uploadStarted) {
+      console.log('Upload already in progress, ignoring duplicate request');
+      return;
+    }
     
     // Validate file type
     if (!allowedTypes.includes(file.type)) {
@@ -53,6 +59,8 @@ export function ImageUpload({
     }
     
     setIsUploading(true);
+    setUploadStarted(true);
+    
     // Call the onUploadStarted callback if provided
     if (onUploadStarted) {
       onUploadStarted();
@@ -77,11 +85,13 @@ export function ImageUpload({
       });
     } finally {
       setIsUploading(false);
+      // Keep uploadStarted true to prevent duplicate uploads until component is unmounted
     }
-  }, [allowedTypes, maxSizeMB, onUploadComplete, onUploadStarted, uploadPath]);
+  }, [allowedTypes, maxSizeMB, onUploadComplete, onUploadStarted, uploadPath, isUploading, uploadStarted]);
   
   const clearImage = useCallback(() => {
     setImageUrl(null);
+    setUploadStarted(false);
     onUploadComplete('');
   }, [onUploadComplete]);
   

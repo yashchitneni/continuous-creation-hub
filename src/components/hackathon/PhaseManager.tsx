@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,34 +18,35 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Clock, Calendar, CheckCircle, Award, Calendar as CalendarIcon } from 'lucide-react';
-import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
-import { HackathonStatus } from '@/hooks/useHackathons';
+import { useUpdateHackathonPhase, HackathonStatus as PhaseStatus } from '@/hooks/useUpdateHackathonPhase';
 import { toast } from '@/hooks/use-toast';
 
 interface PhaseManagerProps {
   hackathon: {
     id: string;
-    status: HackathonStatus;
+    status: string;
   };
   isCreator: boolean;
 }
 
-const VALID_STATUSES: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
+// Use the ones from useUpdateHackathonPhase
+const VALID_STATUSES: PhaseStatus[] = ['upcoming', 'active', 'judging', 'past'];
 
 const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [targetPhase, setTargetPhase] = useState<HackathonStatus | null>(null);
+  const [targetPhase, setTargetPhase] = useState<PhaseStatus | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const updateHackathonPhase = useUpdateHackathonPhase();
 
   if (!isCreator) return null;
 
-  const currentStatus = VALID_STATUSES.includes(hackathon.status) 
-    ? hackathon.status 
+  // Ensure we're using a valid status
+  const currentStatus = VALID_STATUSES.includes(hackathon.status as PhaseStatus) 
+    ? (hackathon.status as PhaseStatus)
     : 'upcoming';
 
-  const handlePhaseSelect = (phase: HackathonStatus) => {
+  const handlePhaseSelect = (phase: PhaseStatus) => {
     if (phase === currentStatus) {
       toast({
         title: "No Change Needed",
@@ -81,7 +83,7 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
     }
   };
 
-  const getPhaseIcon = (phase: HackathonStatus) => {
+  const getPhaseIcon = (phase: PhaseStatus) => {
     switch (phase) {
       case 'upcoming': return <Calendar className="h-4 w-4 mr-2" />;
       case 'active': return <Clock className="h-4 w-4 mr-2" />;
