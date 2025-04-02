@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
@@ -24,18 +23,6 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
 
-const debounce = (func: Function, wait: number) => {
-  let timeout: ReturnType<typeof setTimeout>;
-  return function executedFunction(...args: any[]) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
-
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -45,21 +32,12 @@ const HackathonDetail = () => {
   const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = useState(false);
   
   console.log("Hackathon ID from params:", id);
-  console.log("Current user:", user);
   
   const { 
     data: hackathon, 
     isLoading: loadingHackathon,
     refetch: refetchHackathon 
   } = useHackathon(id);
-  
-  const debouncedRefetch = useCallback(
-    debounce(() => {
-      console.log('Debounced refetch called');
-      refetchHackathon();
-    }, 300),
-    [refetchHackathon]
-  );
   
   const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
@@ -81,7 +59,7 @@ const HackathonDetail = () => {
         filter: `id=eq.${id}`
       }, (payload) => {
         console.log('Hackathon updated via real-time:', payload);
-        debouncedRefetch();
+        refetchHackathon();
       })
       .subscribe((status) => {
         console.log('Supabase real-time subscription status:', status);
@@ -91,7 +69,7 @@ const HackathonDetail = () => {
       console.log('Cleaning up Supabase real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [id, debouncedRefetch]);
+  }, [id, refetchHackathon]);
   
   const joinHackathon = useJoinHackathon();
   const deleteHackathon = useDeleteHackathon();
@@ -161,12 +139,11 @@ const HackathonDetail = () => {
   
   const typedHackathon = {
     ...hackathon,
-    status: ensureValidStatus(hackathon.status),
-    creator_id: hackathon.creator_id || null
+    status: ensureValidStatus(hackathon?.status || 'upcoming'),
+    creator_id: hackathon?.creator_id || null
   };
   
   console.log("Is creator:", user?.id === typedHackathon.creator_id);
-  console.log("Final hackathon data passed to components:", typedHackathon);
   
   return (
     <PageLayout>
