@@ -32,7 +32,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/hackathons" element={<Hackathons />} />
               <Route path="/hackathons/:id" element={<HackathonDetail />} />
-              <Route path="/hackathons/:hackathonId/projects/:projectId" element={<ProjectDetail />} />
+              <Route path="/projects/:projectId" element={<ProjectDetail />} />
               <Route path="/showcase" element={<Showcase />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/profile/:id" element={<Profile />} />

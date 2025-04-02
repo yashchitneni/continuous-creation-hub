@@ -58,22 +58,20 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
                 : 'No Projects Yet'}
         </h2>
         
-        {/* Only show the submit button if all conditions are met:
+        {/* Show submit button only if all conditions are met:
             1. User is logged in
             2. User is a participant
             3. Hackathon is active
-            4. User has not already submitted a project */}
-        {user && isParticipant && isActiveHackathon && !hasUserSubmittedProject && (
+            4. User has NOT already submitted a project */}
+        {user && isParticipant && isActiveHackathon && !hasUserSubmittedProject ? (
           <Button onClick={() => setIsSubmitDialogOpen(true)}>
             Submit Your Project
           </Button>
-        )}
-        
-        {user && isParticipant && isActiveHackathon && hasUserSubmittedProject && (
+        ) : user && isParticipant && isActiveHackathon && hasUserSubmittedProject ? (
           <div className="text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-md">
             You've already submitted a project
           </div>
-        )}
+        ) : null}
       </div>
       
       {loadingProjects ? (

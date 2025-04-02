@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
@@ -19,9 +20,9 @@ import HackathonHeader from '@/components/hackathon/HackathonHeader';
 import ModifiedProjectsList from '@/components/hackathon/ModifiedProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
 import ParticipantsDialog from '@/components/hackathon/ParticipantsDialog';
+import HackathonPhaseManager from '@/components/hackathon/HackathonPhaseManager';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
 
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +44,6 @@ const HackathonDetail = () => {
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(id);
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
-  const updateHackathonPhase = useUpdateHackathonPhase();
   
   console.log("Hackathon data:", hackathon);
   
@@ -143,7 +143,8 @@ const HackathonDetail = () => {
     creator_id: hackathon?.creator_id || null
   };
   
-  console.log("Is creator:", user?.id === typedHackathon.creator_id);
+  const isCreator = user?.id === typedHackathon.creator_id;
+  console.log("Is creator:", isCreator);
   
   return (
     <PageLayout>
@@ -168,10 +169,10 @@ const HackathonDetail = () => {
             isJoinHackathonPending={joinHackathon.isPending}
             isSubmitDialogOpen={isSubmitDialogOpen}
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
-            updatePhaseLoading={updateHackathonPhase.isPending}
+            updatePhaseLoading={false}
           />
           
-          <div className="mt-4 mb-8">
+          <div className="mt-4 mb-4 flex flex-wrap gap-4">
             <Button 
               variant="outline" 
               onClick={() => setIsParticipantsDialogOpen(true)}
@@ -180,6 +181,17 @@ const HackathonDetail = () => {
               <Users className="h-4 w-4" />
               View Participants ({participantCount})
             </Button>
+            
+            {isCreator && (
+              <HackathonPhaseManager
+                hackathonId={hackathon.id}
+                currentPhase={typedHackathon.status as any}
+                participantCount={participantCount}
+                projectCount={projects.length}
+                isCreator={isCreator}
+                onPhaseChanged={refetchHackathon}
+              />
+            )}
           </div>
           
           <ModifiedProjectsList 

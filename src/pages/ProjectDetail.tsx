@@ -14,23 +14,28 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Award, Calendar, Github, ExternalLink, Star, Users } from 'lucide-react';
 
 const ProjectDetail = () => {
-  const { projectId, hackathonId } = useParams<{ projectId: string, hackathonId: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const { user } = useAuth();
   
   const [storyScore, setStoryScore] = useState(5);
   const [styleScore, setStyleScore] = useState(5);
   const [functionScore, setFunctionScore] = useState(5);
   
+  console.log("Project ID from params:", projectId);
+  
   const { data: project, isLoading: loadingProject } = useProject(projectId);
-  const { data: hackathon, isLoading: loadingHackathon } = useHackathon(hackathonId || project?.hackathon_id);
+  const { data: hackathon, isLoading: loadingHackathon } = useHackathon(project?.hackathon_id);
   const { data: isParticipant = false } = useIsHackathonParticipant(
-    hackathonId || project?.hackathon_id, 
+    project?.hackathon_id, 
     user?.id
   );
   
   const { data: userVote } = useGetUserVote(projectId, user?.id);
   const { data: projectScores } = useProjectScores(projectId);
   const voteForProject = useVoteForProject();
+  
+  console.log("Project data:", project);
+  console.log("Related hackathon:", hackathon);
   
   const handleSubmitVote = async () => {
     if (!user || !projectId) return;
@@ -57,7 +62,7 @@ const ProjectDetail = () => {
     );
   }
   
-  if (!project || !hackathon) {
+  if (!project) {
     return (
       <PageLayout>
         <div className="min-h-screen flex flex-col items-center justify-center">
@@ -82,7 +87,7 @@ const ProjectDetail = () => {
         <div className="max-w-7xl mx-auto">
           <div className="mb-2">
             <Button variant="ghost" asChild>
-              <Link to={`/hackathons/${hackathon.id}`}>
+              <Link to={`/hackathons/${project.hackathon_id}`}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Hackathon
               </Link>
@@ -104,15 +109,17 @@ const ProjectDetail = () => {
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">{project.title}</h1>
                 
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      Submitted for{' '}
-                      <Link to={`/hackathons/${hackathon.id}`} className="text-jungle hover:underline">
-                        {hackathon.title}
-                      </Link>
-                    </span>
-                  </div>
+                  {hackathon && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        Submitted for{' '}
+                        <Link to={`/hackathons/${hackathon.id}`} className="text-jungle hover:underline">
+                          {hackathon.title}
+                        </Link>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -387,24 +394,26 @@ const ProjectDetail = () => {
                 </Card>
               )}
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Hackathon Info</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Link 
-                      to={`/hackathons/${hackathon.id}`}
-                      className="text-jungle hover:underline font-medium"
-                    >
-                      {hackathon.title}
-                    </Link>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Status: <span className="capitalize">{hackathon.status}</span>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              {hackathon && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Hackathon Info</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Link 
+                        to={`/hackathons/${hackathon.id}`}
+                        className="text-jungle hover:underline font-medium"
+                      >
+                        {hackathon.title}
+                      </Link>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Status: <span className="capitalize">{hackathon.status}</span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
