@@ -54,14 +54,15 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
     if (!targetPhase) return;
     
     try {
+      console.log('Confirming phase change to:', targetPhase);
       await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
         status: targetPhase
       });
-      // The dialog will be closed in the useEffect below when isSuccess becomes true
+      // Close dialog on success (handled by the useEffect below)
     } catch (error) {
+      console.error('Failed to update phase:', error);
       // Error is handled by the mutation's onError
-      // Just ensure the dialog stays open so user can try again or cancel
     }
   };
 

@@ -9,7 +9,7 @@ interface UpdateHackathonPhaseParams {
   status: HackathonStatus;
 }
 
-// Define valid phase transitions
+// Define valid phase transitions - ensuring only valid statuses are used
 const validTransitions: Record<string, HackathonStatus[]> = {
   upcoming: ['active'],
   active: ['judging'],
@@ -62,9 +62,32 @@ export const useUpdateHackathonPhase = () => {
       
       // Update the hackathon status
       console.log('Updating hackathon status to:', status);
+      
+      // Ensure the status value is exactly one of the valid values
+      // This should match what's allowed in the database constraint
+      let validatedStatus: string;
+      
+      switch(status) {
+        case 'upcoming':
+          validatedStatus = 'upcoming';
+          break;
+        case 'active':
+          validatedStatus = 'active';
+          break;
+        case 'judging':
+          validatedStatus = 'judging';
+          break;
+        case 'past':
+          validatedStatus = 'past';
+          break;
+        default:
+          console.error('Invalid status value:', status);
+          throw new Error(`Invalid status value: ${status}`);
+      }
+      
       const { data, error: updateError } = await supabase
         .from('hackathons')
-        .update({ status })
+        .update({ status: validatedStatus })
         .eq('id', hackathonId)
         .select()
         .single();
