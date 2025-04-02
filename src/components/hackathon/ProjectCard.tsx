@@ -52,11 +52,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       )}
       
       <div className="relative h-48">
-        <img 
-          src={project.image_url || 'https://placehold.co/600x400?text=No+Image'} 
-          alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        {project.image_url ? (
+          <img 
+            src={project.image_url || 'https://placehold.co/600x400?text=No+Image'} 
+            alt={project.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <span className="text-muted-foreground">No Image</span>
+          </div>
+        )}
       </div>
       
       <div className="p-6">

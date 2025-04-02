@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
@@ -33,7 +32,6 @@ const HackathonDetail = () => {
   console.log("Hackathon ID from params:", id);
   console.log("Current user:", user);
   
-  // Use enabled option to make sure we have an ID before fetching
   const { 
     data: hackathon, 
     isLoading: loadingHackathon,
@@ -47,11 +45,9 @@ const HackathonDetail = () => {
   
   console.log("Hackathon data:", hackathon);
   
-  // Set up effect to refetch hackathon data every few seconds while on the page
   useEffect(() => {
     if (!id) return;
     
-    // Refetch hackathon data every 5 seconds to ensure we have the latest status
     const intervalId = setInterval(() => {
       refetchHackathon();
     }, 5000);
@@ -91,7 +87,6 @@ const HackathonDetail = () => {
     );
   }
   
-  // Make sure we have a proper status
   const ensureValidStatus = (status: string): HackathonStatus => {
     const validStatuses: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
     return validStatuses.includes(status as HackathonStatus) 
@@ -126,7 +121,6 @@ const HackathonDetail = () => {
     }
   };
   
-  // Ensure we have a properly typed hackathon object
   const typedHackathon = {
     ...hackathon,
     status: ensureValidStatus(hackathon.status),
@@ -184,7 +178,7 @@ const HackathonDetail = () => {
           
           {user && (
             <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-              <DialogContent className="sm:max-w-[700px]">
+              <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Submit Your Project</DialogTitle>
                   <DialogDescription>
