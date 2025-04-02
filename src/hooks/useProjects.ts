@@ -95,6 +95,19 @@ export const useCreateProject = () => {
   
   return useMutation({
     mutationFn: async (project: Omit<Project, 'id' | 'created_at'>) => {
+      const { data: existingProject, error: checkError } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('hackathon_id', project.hackathon_id)
+        .eq('user_id', project.user_id)
+        .maybeSingle();
+      
+      if (checkError) throw checkError;
+      
+      if (existingProject) {
+        throw new Error('You have already submitted a project for this hackathon');
+      }
+      
       const { data, error } = await supabase
         .from('projects')
         .insert([project])

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -28,6 +29,9 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
   const isJudgingHackathon = hackathon.status === 'judging';
   const isPastHackathon = hackathon.status === 'past';
   
+  // Check if the current user has already submitted a project
+  const hasUserSubmittedProject = user && projects.some(project => project.user_id === user.id);
+  
   let sortedProjects = [...projects];
   if (isJudgingHackathon || isPastHackathon) {
     sortedProjects.sort((a, b) => {
@@ -54,10 +58,16 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                 : 'No Projects Yet'}
         </h2>
         
-        {user && isParticipant && isActiveHackathon && (
+        {user && isParticipant && isActiveHackathon && !hasUserSubmittedProject && (
           <Button onClick={() => setIsSubmitDialogOpen(true)}>
             Submit Your Project
           </Button>
+        )}
+        
+        {user && isParticipant && isActiveHackathon && hasUserSubmittedProject && (
+          <div className="text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-md">
+            You've already submitted a project
+          </div>
         )}
       </div>
       
@@ -69,7 +79,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
           {isActiveHackathon ? (
             <>
               <p className="mb-6">Be the first to submit a project for this hackathon!</p>
-              {user && isParticipant ? (
+              {user && isParticipant && !hasUserSubmittedProject ? (
                 <Button onClick={() => setIsSubmitDialogOpen(true)}>
                   Submit Your Project
                 </Button>
@@ -77,6 +87,8 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                 <Button onClick={onJoinHackathon}>
                   Join Hackathon to Submit
                 </Button>
+              ) : user && isParticipant && hasUserSubmittedProject ? (
+                <p className="text-muted-foreground">You've already submitted a project for this hackathon.</p>
               ) : (
                 <Button asChild>
                   <Link to="/auth">Sign In to Join</Link>

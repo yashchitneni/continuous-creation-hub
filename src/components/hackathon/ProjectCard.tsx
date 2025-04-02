@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tag } from '@/components/ui/tag';
 import { Award, Heart, MessageSquare } from 'lucide-react';
 import { useVoteForProject } from '@/hooks/useProjects';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface ProjectCardProps {
   project: any;
@@ -22,13 +23,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   currentUserId,
   isWinner = false
 }) => {
+  const navigate = useNavigate();
   const isJudgingPhase = hackathonStatus === 'judging';
   const isPastHackathon = hackathonStatus === 'past';
   const canVote = isJudgingPhase && isParticipant && project.creator_id !== currentUserId;
   
+  // Fetch the creator's profile
+  const { data: creatorProfile } = useUserProfile(project.user_id);
+  
   const voteForProject = useVoteForProject();
   
-  const handleVote = async () => {
+  const handleVote = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click navigation
     if (!currentUserId || !canVote) return;
     
     await voteForProject.mutateAsync({
@@ -40,10 +46,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     });
   };
   
+  const handleCardClick = () => {
+    navigate(`/hackathons/${project.hackathon_id}/projects/${project.id}`);
+  };
+  
   const hasVoted = project.votes?.some((vote: any) => vote.user_id === currentUserId);
   
   return (
-    <div className={`glassmorphism rounded-xl overflow-hidden group relative ${isWinner ? 'ring-2 ring-yellow-400' : ''}`}>
+    <div 
+      className={`glassmorphism rounded-xl overflow-hidden group relative ${isWinner ? 'ring-2 ring-yellow-400' : ''} cursor-pointer`}
+      onClick={handleCardClick}
+    >
       {isWinner && (
         <div className="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-xs py-1 px-2 rounded-full flex items-center gap-1">
           <Award className="h-3 w-3" />
@@ -75,9 +88,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
         
         <h3 className="text-xl font-bold mb-2 group-hover:text-jungle transition-colors">
-          <Link to={`/hackathons/${project.hackathon_id}/projects/${project.id}`}>
-            {project.title}
-          </Link>
+          {project.title}
         </h3>
         
         <p className="text-muted-foreground line-clamp-3 mb-4">
@@ -85,13 +96,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </p>
         
         <div className="flex items-center justify-between">
-          <Link to={`/profile/${project.creator_id}`} className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={project.creator?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${project.creator?.username || 'User'}`} />
-              <AvatarFallback>{(project.creator?.username || 'U').charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm">{project.creator?.username || 'User'}</span>
-          </Link>
+          <div 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click navigation
+            }}
+          >
+            <Link to={`/profile/${project.user_id}`} className="flex items-center gap-2">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={creatorProfile?.avatar_url || `https://api.dicebear.com/6.x/initials/svg?seed=${creatorProfile?.username || 'User'}`} />
+                <AvatarFallback>{(creatorProfile?.username || 'U').charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm">{creatorProfile?.username || 'User'}</span>
+            </Link>
+          </div>
           
           {(isJudgingPhase || isPastHackathon) && (
             <div className="flex items-center gap-1 text-sm">
