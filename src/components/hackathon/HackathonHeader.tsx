@@ -77,11 +77,12 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   }, [hackathon, currentStatus]);
   
   useEffect(() => {
-    if (!updateHackathonPhase.isPending && !updateHackathonPhase.isError && isPhaseConfirmOpen) {
+    if ((updateHackathonPhase.isSuccess || updateHackathonPhase.isError) && isPhaseConfirmOpen) {
+      console.log('Mutation completed, closing modal. Success:', updateHackathonPhase.isSuccess, 'Error:', updateHackathonPhase.isError);
       setIsPhaseConfirmOpen(false);
       setTargetPhase(null);
     }
-  }, [updateHackathonPhase.isPending, updateHackathonPhase.isError, isPhaseConfirmOpen]);
+  }, [updateHackathonPhase.isSuccess, updateHackathonPhase.isError, isPhaseConfirmOpen]);
   
   useEffect(() => {
     console.log("HackathonHeader received hackathon:", hackathon);
@@ -145,7 +146,11 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   };
 
   const confirmPhaseChange = async () => {
-    if (!targetPhase) return;
+    console.log('confirmPhaseChange called with targetPhase:', targetPhase);
+    if (!targetPhase) {
+      console.log('No target phase, exiting');
+      return;
+    }
     
     console.log("Confirming phase change to:", targetPhase);
     console.log("From current phase:", hackathon.status);
@@ -161,11 +166,13 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         return;
       }
       
+      console.log('Calling mutateAsync with hackathonId:', hackathon.id, 'and status:', targetPhase);
       await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
         status: targetPhase
       });
       
+      console.log('Mutation completed successfully');
     } catch (error) {
       console.error('Error confirming phase change:', error);
     }
@@ -338,7 +345,17 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         </DialogContent>
       </Dialog>
       
-      <AlertDialog open={isPhaseConfirmOpen} onOpenChange={setIsPhaseConfirmOpen}>
+      <AlertDialog 
+        open={isPhaseConfirmOpen} 
+        onOpenChange={(open) => {
+          console.log('Modal open state changing to:', open);
+          if (!updateHackathonPhase.isPending) {
+            setIsPhaseConfirmOpen(open);
+          } else {
+            console.log('Preventing modal close during mutation');
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Change Hackathon Phase</AlertDialogTitle>
@@ -347,9 +364,12 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={updateHackathonPhase.isPending}>Cancel</AlertDialogCancel>
             <Button 
-              onClick={confirmPhaseChange} 
+              onClick={() => {
+                console.log('Confirm button clicked');
+                confirmPhaseChange();
+              }}
               disabled={updateHackathonPhase.isPending}
               className={updateHackathonPhase.isPending ? "opacity-70" : ""}
             >

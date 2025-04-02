@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -23,6 +23,18 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
 
+const debounce = (func: Function, wait: number) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -39,6 +51,14 @@ const HackathonDetail = () => {
     isLoading: loadingHackathon,
     refetch: refetchHackathon 
   } = useHackathon(id);
+  
+  const debouncedRefetch = useCallback(
+    debounce(() => {
+      console.log('Debounced refetch called');
+      refetchHackathon();
+    }, 300),
+    [refetchHackathon]
+  );
   
   const { data: isParticipant = false } = useIsHackathonParticipant(id, user?.id);
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
@@ -60,7 +80,7 @@ const HackathonDetail = () => {
         filter: `id=eq.${id}`
       }, (payload) => {
         console.log('Hackathon updated via real-time:', payload);
-        refetchHackathon();
+        debouncedRefetch();
       })
       .subscribe((status) => {
         console.log('Supabase real-time subscription status:', status);
@@ -70,7 +90,7 @@ const HackathonDetail = () => {
       console.log('Cleaning up Supabase real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [id, refetchHackathon]);
+  }, [id, debouncedRefetch]);
   
   const joinHackathon = useJoinHackathon();
   const deleteHackathon = useDeleteHackathon();

@@ -60,6 +60,7 @@ export const useUpdateHackathonPhase = () => {
       
       // Special validation for transitioning to judging phase - ensure there are projects
       if (normalizedTargetStatus === 'judging') {
+        console.log('Checking for projects before transitioning to judging phase');
         const { count, error: projectsError } = await supabase
           .from('projects')
           .select('*', { count: 'exact', head: true })
@@ -71,6 +72,7 @@ export const useUpdateHackathonPhase = () => {
         }
         
         if (count === 0) {
+          console.error('No projects found for hackathon');
           throw new Error('Cannot transition to judging phase: no projects have been submitted yet');
         }
         
@@ -80,6 +82,7 @@ export const useUpdateHackathonPhase = () => {
       console.log('Current status:', existingHackathon.status, 'New status:', status);
       
       // Perform the update - we're not expecting a direct return of data
+      console.log('Executing update query');
       const { error: updateError } = await supabase
         .from('hackathons')
         .update({ status })
@@ -90,9 +93,11 @@ export const useUpdateHackathonPhase = () => {
         throw new Error(`Failed to update hackathon phase: ${updateError.message}`);
       }
       
+      console.log('Update successful, fetching updated hackathon');
+      
       // After successful update, fetch the updated record
       // Adding a small delay to ensure the database has time to update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Now fetch the updated hackathon data with a fresh query
       const { data: updatedHackathon, error: refetchError } = await supabase
@@ -122,6 +127,7 @@ export const useUpdateHackathonPhase = () => {
       return updatedHackathon;
     },
     onSuccess: (data) => {
+      console.log('Mutation onSuccess called with data:', data);
       // Immediately update the cache for instant UI feedback
       queryClient.setQueryData(['hackathon', data.id], data);
       
