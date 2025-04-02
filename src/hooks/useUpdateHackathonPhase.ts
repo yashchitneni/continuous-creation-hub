@@ -18,6 +18,7 @@ const validTransitions: Record<string, HackathonStatus[]> = {
 };
 
 // These are the exact values allowed by the database constraint
+// Must match exactly what's in the database 'hackathons_status_check' constraint
 const VALID_DB_STATUSES = ['upcoming', 'active', 'judging', 'past'];
 
 export const useUpdateHackathonPhase = () => {
@@ -26,6 +27,12 @@ export const useUpdateHackathonPhase = () => {
   return useMutation({
     mutationFn: async ({ hackathonId, status }: UpdateHackathonPhaseParams) => {
       console.log('Starting phase update mutation for hackathon:', hackathonId, 'to status:', status);
+      
+      // First, verify the status is a valid database value
+      if (!VALID_DB_STATUSES.includes(status)) {
+        console.error('Invalid status value:', status);
+        throw new Error(`Invalid status value: ${status}. Must be one of: ${VALID_DB_STATUSES.join(', ')}`);
+      }
       
       // Validate the transition
       const { data: currentHackathon, error: fetchError } = await supabase
@@ -71,19 +78,11 @@ export const useUpdateHackathonPhase = () => {
       // Update the hackathon status
       console.log('Updating hackathon status to:', status);
       
-      // Validate the status matches one of our allowed values exactly
-      if (!VALID_DB_STATUSES.includes(status)) {
-        console.error('Invalid status value:', status);
-        throw new Error(`Invalid status value: ${status}`);
-      }
-      
       try {
-        // Make sure we're updating with a clean value (no extra spaces, exact case)
-        const normalizedStatus = status.trim().toLowerCase();
-        
+        // Send the exact string value without any modifications
         const { data, error: updateError } = await supabase
           .from('hackathons')
-          .update({ status: normalizedStatus })
+          .update({ status: status })
           .eq('id', hackathonId)
           .select()
           .single();

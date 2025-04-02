@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,16 +29,23 @@ interface PhaseManagerProps {
   isCreator: boolean;
 }
 
+const VALID_STATUSES: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
+
 const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [targetPhase, setTargetPhase] = useState<HackathonStatus | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const updateHackathonPhase = useUpdateHackathonPhase();
 
   if (!isCreator) return null;
 
+  const currentStatus = VALID_STATUSES.includes(hackathon.status) 
+    ? hackathon.status 
+    : 'upcoming';
+
   const handlePhaseSelect = (phase: HackathonStatus) => {
-    if (phase === hackathon.status) {
+    if (phase === currentStatus) {
       toast({
         title: "No Change Needed",
         description: `The hackathon is already in ${phase} phase.`
@@ -47,6 +53,7 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
       return;
     }
     
+    setUpdateError(null);
     setTargetPhase(phase);
     setIsConfirmDialogOpen(true);
   };
@@ -56,6 +63,7 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
     
     try {
       setIsUpdating(true);
+      setUpdateError(null);
       console.log('Confirming phase change to:', targetPhase);
       
       await updateHackathonPhase.mutateAsync({
@@ -63,13 +71,11 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
         status: targetPhase
       });
       
-      // Only close dialog on success
       setIsConfirmDialogOpen(false);
       setTargetPhase(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update phase:', error);
-      // Error is handled by the mutation's onError
-      // But we don't close the dialog so user can try again
+      setUpdateError(error.message || 'An unexpected error occurred');
     } finally {
       setIsUpdating(false);
     }
@@ -132,10 +138,12 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
       <AlertDialog 
         open={isConfirmDialogOpen} 
         onOpenChange={(open) => {
-          // Only allow closing if we're not in the middle of updating
           if (!isUpdating) {
             setIsConfirmDialogOpen(open);
-            if (!open) setTargetPhase(null);
+            if (!open) {
+              setTargetPhase(null);
+              setUpdateError(null);
+            }
           }
         }}
       >
@@ -144,6 +152,13 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
             <AlertDialogTitle>Confirm Phase Change</AlertDialogTitle>
             <AlertDialogDescription>
               {getConfirmationMessage()}
+              
+              {updateError && (
+                <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md">
+                  <p className="font-medium">Error:</p>
+                  <p>{updateError}</p>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
