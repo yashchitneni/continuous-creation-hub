@@ -47,6 +47,7 @@ interface HackathonHeaderProps {
   isJoinHackathonPending: boolean;
   isSubmitDialogOpen: boolean;
   setIsSubmitDialogOpen: (isOpen: boolean) => void;
+  updatePhaseLoading?: boolean;
 }
 
 const HackathonHeader: React.FC<HackathonHeaderProps> = ({
@@ -58,7 +59,8 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   onDeleteHackathon,
   isJoinHackathonPending,
   isSubmitDialogOpen,
-  setIsSubmitDialogOpen
+  setIsSubmitDialogOpen,
+  updatePhaseLoading = false
 }) => {
   const [isParticipantsDialogOpen, setIsParticipantsDialogOpen] = useState(false);
   const [isPhaseConfirmOpen, setIsPhaseConfirmOpen] = useState(false);
@@ -76,6 +78,14 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
       setCurrentStatus(hackathon.status);
     }
   }, [hackathon, currentStatus]);
+  
+  // Reset the confirm dialog and target phase when mutation completes
+  useEffect(() => {
+    if (!updateHackathonPhase.isPending && isPhaseConfirmOpen) {
+      setIsPhaseConfirmOpen(false);
+      setTargetPhase(null);
+    }
+  }, [updateHackathonPhase.isPending, isPhaseConfirmOpen]);
   
   // Log the hackathon object every time it changes
   useEffect(() => {
@@ -146,7 +156,8 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     console.log("From current phase:", hackathon.status);
     
     try {
-      setIsPhaseConfirmOpen(false); // Close dialog first
+      // Close dialog first
+      setIsPhaseConfirmOpen(false);
       
       // Make sure we have a valid hackathon ID
       if (!hackathon.id) {
@@ -159,15 +170,14 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         return;
       }
       
-      const result = await updateHackathonPhase.mutateAsync({
+      await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
         status: targetPhase
       });
       
-      console.log("Phase update result:", result);
-      
     } catch (error) {
       console.error('Error confirming phase change:', error);
+      // The error will be handled by the mutation's onError callback
     }
   };
 
@@ -182,9 +192,13 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={updatePhaseLoading || updateHackathonPhase.isPending}
+          >
             <Clock className="h-4 w-4" />
-            Manage Phase
+            {updateHackathonPhase.isPending ? 'Updating Phase...' : 'Manage Phase'}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -193,7 +207,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           {hackathon.status !== 'upcoming' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('upcoming')}
-              disabled={hackathon.status === 'upcoming' || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'upcoming' || updateHackathonPhase.isPending || updatePhaseLoading}
             >
               Mark as Upcoming
             </DropdownMenuItem>
@@ -201,7 +215,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           {hackathon.status !== 'active' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('active')}
-              disabled={hackathon.status === 'active' || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'active' || updateHackathonPhase.isPending || updatePhaseLoading}
             >
               Start Hackathon (Active)
             </DropdownMenuItem>
@@ -209,7 +223,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           {hackathon.status !== 'judging' && hackathon.status === 'active' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('judging')}
-              disabled={hackathon.status === 'judging' || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'judging' || updateHackathonPhase.isPending || updatePhaseLoading}
             >
               Move to Judging
             </DropdownMenuItem>
@@ -217,7 +231,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           {hackathon.status !== 'past' && hackathon.status === 'judging' && (
             <DropdownMenuItem 
               onClick={() => handlePhaseChange('past')}
-              disabled={hackathon.status === 'past' || updateHackathonPhase.isPending}
+              disabled={hackathon.status === 'past' || updateHackathonPhase.isPending || updatePhaseLoading}
             >
               Mark as Past
             </DropdownMenuItem>

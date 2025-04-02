@@ -9,6 +9,14 @@ interface UpdateHackathonPhaseParams {
   status: HackathonStatus;
 }
 
+// Define valid phase transitions
+const transitionRules: Record<HackathonStatus, HackathonStatus[]> = {
+  'upcoming': ['active'],
+  'active': ['judging', 'upcoming'],
+  'judging': ['past', 'active'],
+  'past': ['upcoming']
+};
+
 export const useUpdateHackathonPhase = () => {
   const queryClient = useQueryClient();
   
@@ -34,13 +42,38 @@ export const useUpdateHackathonPhase = () => {
       }
       
       // Normalize status values for comparison
-      const normalizedCurrentStatus = existingHackathon.status.toLowerCase().trim();
-      const normalizedTargetStatus = status.toLowerCase().trim();
+      const normalizedCurrentStatus = existingHackathon.status.toLowerCase().trim() as HackathonStatus;
+      const normalizedTargetStatus = status.toLowerCase().trim() as HackathonStatus;
       
       // If the status is already the same, return early
       if (normalizedCurrentStatus === normalizedTargetStatus) {
         console.log(`Hackathon is already in ${status} phase. No update needed.`);
         return existingHackathon;
+      }
+      
+      // Validate the phase transition
+      if (!transitionRules[normalizedCurrentStatus]?.includes(normalizedTargetStatus)) {
+        const allowedTransitions = transitionRules[normalizedCurrentStatus]?.join(', ');
+        throw new Error(`Invalid phase transition from '${normalizedCurrentStatus}' to '${normalizedTargetStatus}'. Allowed transitions: ${allowedTransitions}`);
+      }
+      
+      // Special validation for transitioning to judging phase - ensure there are projects
+      if (normalizedTargetStatus === 'judging') {
+        const { count, error: projectsError } = await supabase
+          .from('projects')
+          .select('*', { count: 'exact', head: true })
+          .eq('hackathon_id', hackathonId);
+        
+        if (projectsError) {
+          console.error('Error checking projects:', projectsError);
+          throw new Error(`Failed to verify projects: ${projectsError.message}`);
+        }
+        
+        if (count === 0) {
+          throw new Error('Cannot transition to judging phase: no projects have been submitted yet');
+        }
+        
+        console.log(`Found ${count} projects for hackathon. Proceeding with transition to judging.`);
       }
       
       console.log('Current status:', existingHackathon.status, 'New status:', status);

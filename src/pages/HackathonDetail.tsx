@@ -20,6 +20,8 @@ import ProjectsList from '@/components/hackathon/ProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
 import ParticipantsDialog from '@/components/hackathon/ParticipantsDialog';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
 
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,17 +44,32 @@ const HackathonDetail = () => {
   const { data: participantCount = 0 } = useHackathonParticipantCount(id);
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(id);
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
+  const updateHackathonPhase = useUpdateHackathonPhase();
   
   console.log("Hackathon data:", hackathon);
   
   useEffect(() => {
     if (!id) return;
     
-    const intervalId = setInterval(() => {
-      refetchHackathon();
-    }, 5000);
+    const channel = supabase
+      .channel(`hackathon-${id}-changes`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'hackathons',
+        filter: `id=eq.${id}`
+      }, (payload) => {
+        console.log('Hackathon updated via real-time:', payload);
+        refetchHackathon();
+      })
+      .subscribe((status) => {
+        console.log('Supabase real-time subscription status:', status);
+      });
     
-    return () => clearInterval(intervalId);
+    return () => {
+      console.log('Cleaning up Supabase real-time subscription');
+      supabase.removeChannel(channel);
+    };
   }, [id, refetchHackathon]);
   
   const joinHackathon = useJoinHackathon();
@@ -153,6 +170,7 @@ const HackathonDetail = () => {
             isJoinHackathonPending={joinHackathon.isPending}
             isSubmitDialogOpen={isSubmitDialogOpen}
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
+            updatePhaseLoading={updateHackathonPhase.isPending}
           />
           
           <div className="mt-4 mb-8">
