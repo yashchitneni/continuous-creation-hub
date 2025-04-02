@@ -33,6 +33,7 @@ interface PhaseManagerProps {
 const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [targetPhase, setTargetPhase] = useState<HackathonStatus | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const updateHackathonPhase = useUpdateHackathonPhase();
 
   if (!isCreator) return null;
@@ -51,18 +52,26 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
   };
 
   const handleConfirmPhaseChange = async () => {
-    if (!targetPhase) return;
+    if (!targetPhase || isUpdating) return;
     
     try {
+      setIsUpdating(true);
       console.log('Confirming phase change to:', targetPhase);
+      
       await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
         status: targetPhase
       });
-      // Close dialog on success (handled by the useEffect below)
+      
+      // Only close dialog on success
+      setIsConfirmDialogOpen(false);
+      setTargetPhase(null);
     } catch (error) {
       console.error('Failed to update phase:', error);
       // Error is handled by the mutation's onError
+      // But we don't close the dialog so user can try again
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -124,7 +133,7 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
         open={isConfirmDialogOpen} 
         onOpenChange={(open) => {
           // Only allow closing if we're not in the middle of updating
-          if (!updateHackathonPhase.isPending) {
+          if (!isUpdating) {
             setIsConfirmDialogOpen(open);
             if (!open) setTargetPhase(null);
           }
@@ -138,14 +147,14 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={updateHackathonPhase.isPending}>
+            <AlertDialogCancel disabled={isUpdating}>
               Cancel
             </AlertDialogCancel>
             <Button 
               onClick={handleConfirmPhaseChange}
-              disabled={updateHackathonPhase.isPending}
+              disabled={isUpdating}
             >
-              {updateHackathonPhase.isPending ? 'Updating...' : 'Confirm'}
+              {isUpdating ? 'Updating...' : 'Confirm'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

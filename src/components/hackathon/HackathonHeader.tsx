@@ -40,12 +40,17 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   isJoinHackathonPending,
   isSubmitDialogOpen,
   setIsSubmitDialogOpen,
-  updatePhaseLoading
 }) => {
   const isCreator = user?.id === hackathon.creator_id;
   
+  // Ensure the status is one of the valid values
+  const validStatuses: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
+  const safeStatus: HackathonStatus = validStatuses.includes(hackathon.status as HackathonStatus) 
+    ? hackathon.status as HackathonStatus 
+    : 'upcoming';
+  
   const getStatusBadgeVariant = () => {
-    switch (hackathon.status) {
+    switch (safeStatus) {
       case 'upcoming': return 'outline';
       case 'active': return 'default';
       case 'judging': return 'secondary';
@@ -55,7 +60,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   };
   
   const getStatusLabel = () => {
-    switch (hackathon.status) {
+    switch (safeStatus) {
       case 'upcoming': return 'Upcoming';
       case 'active': return 'Active';
       case 'judging': return 'Judging';
@@ -64,7 +69,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     }
   };
   
-  const canSubmitProject = isParticipant && hackathon.status === 'active';
+  const canSubmitProject = isParticipant && safeStatus === 'active';
 
   return (
     <div className="mb-8">
@@ -93,12 +98,15 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
         <div className="flex flex-wrap items-center gap-3">
           {/* Phase Manager (for creator only) */}
           <PhaseManager 
-            hackathon={hackathon} 
+            hackathon={{
+              id: hackathon.id,
+              status: safeStatus
+            }}
             isCreator={isCreator} 
           />
           
           {/* Join Hackathon Button (for non-participants) */}
-          {user && !isParticipant && hackathon.status !== 'past' && (
+          {user && !isParticipant && safeStatus !== 'past' && (
             <Button onClick={onJoinHackathon} disabled={isJoinHackathonPending}>
               {isJoinHackathonPending ? 'Joining...' : 'Join Hackathon'}
             </Button>

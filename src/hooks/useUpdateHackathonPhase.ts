@@ -17,6 +17,9 @@ const validTransitions: Record<string, HackathonStatus[]> = {
   past: []
 };
 
+// These are the exact values allowed by the database constraint
+const VALID_DB_STATUSES = ['upcoming', 'active', 'judging', 'past'];
+
 export const useUpdateHackathonPhase = () => {
   const queryClient = useQueryClient();
 
@@ -29,14 +32,19 @@ export const useUpdateHackathonPhase = () => {
         .from('hackathons')
         .select('status')
         .eq('id', hackathonId)
-        .single();
+        .maybeSingle();
       
       if (fetchError) {
         console.error('Error fetching current hackathon status:', fetchError);
         throw new Error(`Failed to fetch current hackathon status: ${fetchError.message}`);
       }
       
+      if (!currentHackathon) {
+        throw new Error('Hackathon not found');
+      }
+      
       const currentStatus = currentHackathon.status as HackathonStatus;
+      console.log('Current status:', currentStatus, 'Target status:', status);
       
       // Check if the transition is valid
       if (!validTransitions[currentStatus]?.includes(status)) {
@@ -63,42 +71,34 @@ export const useUpdateHackathonPhase = () => {
       // Update the hackathon status
       console.log('Updating hackathon status to:', status);
       
-      // Ensure the status value is exactly one of the valid values
-      // This should match what's allowed in the database constraint
-      let validatedStatus: string;
-      
-      switch(status) {
-        case 'upcoming':
-          validatedStatus = 'upcoming';
-          break;
-        case 'active':
-          validatedStatus = 'active';
-          break;
-        case 'judging':
-          validatedStatus = 'judging';
-          break;
-        case 'past':
-          validatedStatus = 'past';
-          break;
-        default:
-          console.error('Invalid status value:', status);
-          throw new Error(`Invalid status value: ${status}`);
+      // Validate the status matches one of our allowed values exactly
+      if (!VALID_DB_STATUSES.includes(status)) {
+        console.error('Invalid status value:', status);
+        throw new Error(`Invalid status value: ${status}`);
       }
       
-      const { data, error: updateError } = await supabase
-        .from('hackathons')
-        .update({ status: validatedStatus })
-        .eq('id', hackathonId)
-        .select()
-        .single();
-      
-      if (updateError) {
-        console.error('Error updating hackathon status:', updateError);
-        throw new Error(`Failed to update hackathon status: ${updateError.message}`);
+      try {
+        // Make sure we're updating with a clean value (no extra spaces, exact case)
+        const normalizedStatus = status.trim().toLowerCase();
+        
+        const { data, error: updateError } = await supabase
+          .from('hackathons')
+          .update({ status: normalizedStatus })
+          .eq('id', hackathonId)
+          .select()
+          .single();
+        
+        if (updateError) {
+          console.error('Error updating hackathon status:', updateError);
+          throw new Error(`Failed to update hackathon status: ${updateError.message}`);
+        }
+        
+        console.log('Successfully updated hackathon status:', data);
+        return data;
+      } catch (error: any) {
+        console.error('Update operation failed:', error);
+        throw error;
       }
-      
-      console.log('Successfully updated hackathon status:', data);
-      return data;
     },
     onSuccess: (data) => {
       console.log('Phase update mutation succeeded:', data);
