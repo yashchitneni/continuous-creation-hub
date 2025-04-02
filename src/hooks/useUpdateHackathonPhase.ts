@@ -33,8 +33,12 @@ export const useUpdateHackathonPhase = () => {
         throw new Error(`Hackathon with ID ${hackathonId} not found`);
       }
       
+      // Normalize status values for comparison
+      const normalizedCurrentStatus = existingHackathon.status.toLowerCase().trim();
+      const normalizedTargetStatus = status.toLowerCase().trim();
+      
       // If the status is already the same, return early
-      if (existingHackathon.status === status) {
+      if (normalizedCurrentStatus === normalizedTargetStatus) {
         console.log(`Hackathon is already in ${status} phase. No update needed.`);
         return existingHackathon;
       }
@@ -84,7 +88,10 @@ export const useUpdateHackathonPhase = () => {
       return updatedHackathon;
     },
     onSuccess: (data) => {
-      // Immediately invalidate and refetch relevant queries to ensure UI updates
+      // Immediately update the cache for instant UI feedback
+      queryClient.setQueryData(['hackathon', data.id], data);
+      
+      // Also invalidate queries to ensure fresh data on next fetch
       queryClient.invalidateQueries({ queryKey: ['hackathons'] });
       queryClient.invalidateQueries({ queryKey: ['hackathon', data.id] });
       
