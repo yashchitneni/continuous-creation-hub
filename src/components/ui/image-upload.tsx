@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
+  onUploadStarted?: () => void;
   defaultImageUrl?: string;
   className?: string;
   maxSizeMB?: number;
@@ -16,6 +17,7 @@ interface ImageUploadProps {
 
 export function ImageUpload({
   onUploadComplete,
+  onUploadStarted,
   defaultImageUrl,
   className = '',
   maxSizeMB = 5,
@@ -51,6 +53,10 @@ export function ImageUpload({
     }
     
     setIsUploading(true);
+    // Call the onUploadStarted callback if provided
+    if (onUploadStarted) {
+      onUploadStarted();
+    }
     
     try {
       const url = await uploadImage(file, uploadPath);
@@ -72,7 +78,7 @@ export function ImageUpload({
     } finally {
       setIsUploading(false);
     }
-  }, [allowedTypes, maxSizeMB, onUploadComplete, uploadPath]);
+  }, [allowedTypes, maxSizeMB, onUploadComplete, onUploadStarted, uploadPath]);
   
   const clearImage = useCallback(() => {
     setImageUrl(null);

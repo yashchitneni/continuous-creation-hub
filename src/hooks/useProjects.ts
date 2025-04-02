@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -95,27 +96,41 @@ export const useCreateProject = () => {
   
   return useMutation({
     mutationFn: async (project: Omit<Project, 'id' | 'created_at'>) => {
-      const { data: existingProject, error: checkError } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('hackathon_id', project.hackathon_id)
-        .eq('user_id', project.user_id)
-        .maybeSingle();
-      
-      if (checkError) throw checkError;
-      
-      if (existingProject) {
-        throw new Error('You have already submitted a project for this hackathon');
+      try {
+        // First check if the user has already submitted a project for this hackathon
+        const { data: existingProject, error: checkError } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('hackathon_id', project.hackathon_id)
+          .eq('user_id', project.user_id)
+          .maybeSingle();
+        
+        if (checkError) throw checkError;
+        
+        if (existingProject) {
+          throw new Error('You have already submitted a project for this hackathon');
+        }
+        
+        // Insert the new project
+        const { data, error } = await supabase
+          .from('projects')
+          .insert([project])
+          .select()
+          .single();
+        
+        if (error) {
+          // Check if this is a unique constraint violation
+          if (error.code === '23505' || error.message?.includes('unique constraint')) {
+            throw new Error('You have already submitted a project for this hackathon');
+          }
+          throw error;
+        }
+        
+        return data;
+      } catch (error: any) {
+        console.error("Project submission error:", error);
+        throw error;
       }
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([project])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects', 'hackathon', data.hackathon_id] });

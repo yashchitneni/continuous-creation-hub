@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +27,7 @@ const SubmitProjectForm: React.FC<SubmitProjectFormProps> = ({
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [tags, setTags] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isImageBeingUploaded, setIsImageBeingUploaded] = useState(false);
   
   const createProject = useCreateProject();
   
@@ -39,6 +39,7 @@ const SubmitProjectForm: React.FC<SubmitProjectFormProps> = ({
     if (!imageUrl) newErrors.image = 'Project image is required';
     if (!githubLink.trim()) newErrors.githubLink = 'GitHub repository URL is required';
     if (!tags.trim()) newErrors.tags = 'At least one tag is required';
+    if (isImageBeingUploaded) newErrors.image = 'Please wait for image upload to complete';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -56,28 +57,38 @@ const SubmitProjectForm: React.FC<SubmitProjectFormProps> = ({
       return;
     }
     
-    // Process tags
-    const tagArray = tags.split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag !== '');
-    
-    await createProject.mutateAsync({
-      title,
-      description,
-      image_url: imageUrl,
-      tags: tagArray,
-      github_link: githubLink,
-      website_url: websiteUrl || undefined,
-      hackathon_id: hackathonId,
-      user_id: userId
-    });
-    
-    onClose();
+    try {
+      // Process tags
+      const tagArray = tags.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag !== '');
+      
+      await createProject.mutateAsync({
+        title,
+        description,
+        image_url: imageUrl,
+        tags: tagArray,
+        github_link: githubLink,
+        website_url: websiteUrl || undefined,
+        hackathon_id: hackathonId,
+        user_id: userId
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error("Submit error:", error);
+      // Error is already handled in the mutation
+    }
   };
   
   const handleImageUpload = (url: string) => {
     setImageUrl(url);
     setErrors(prev => ({...prev, image: ''}));
+    setIsImageBeingUploaded(false);
+  };
+  
+  const handleImageUploadStarted = () => {
+    setIsImageBeingUploaded(true);
   };
   
   const handleRemoveImage = () => {
@@ -130,6 +141,7 @@ const SubmitProjectForm: React.FC<SubmitProjectFormProps> = ({
         <div className="max-h-[200px] overflow-hidden">
           <ImageUpload
             onUploadComplete={handleImageUpload}
+            onUploadStarted={handleImageUploadStarted}
             defaultImageUrl={imageUrl}
             uploadPath="project-images"
           />
@@ -155,6 +167,9 @@ const SubmitProjectForm: React.FC<SubmitProjectFormProps> = ({
           </div>
         )}
         {errors.image && <p className="text-xs text-destructive">{errors.image}</p>}
+        {isImageBeingUploaded && (
+          <p className="text-xs text-muted-foreground animate-pulse">Image upload in progress...</p>
+        )}
       </div>
       
       <div className="space-y-2">
@@ -210,7 +225,10 @@ const SubmitProjectForm: React.FC<SubmitProjectFormProps> = ({
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" disabled={createProject.isPending}>
+        <Button 
+          type="submit" 
+          disabled={createProject.isPending || isImageBeingUploaded}
+        >
           {createProject.isPending ? 'Submitting...' : 'Submit Project'}
         </Button>
       </DialogFooter>

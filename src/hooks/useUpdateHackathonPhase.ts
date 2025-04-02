@@ -2,7 +2,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { HackathonStatus } from '@/hooks/useHackathons';
+
+export type HackathonStatus = 'upcoming' | 'active' | 'judging' | 'past';
 
 interface UpdateHackathonPhaseParams {
   hackathonId: string;
@@ -19,7 +20,7 @@ const validTransitions: Record<string, HackathonStatus[]> = {
 
 // These are the exact values allowed by the database constraint
 // Must match exactly what's in the database 'hackathons_status_check' constraint
-const VALID_DB_STATUSES = ['upcoming', 'active', 'judging', 'past'];
+const VALID_DB_STATUSES: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
 
 export const useUpdateHackathonPhase = () => {
   const queryClient = useQueryClient();
@@ -34,66 +35,73 @@ export const useUpdateHackathonPhase = () => {
         throw new Error(`Invalid status value: ${status}. Must be one of: ${VALID_DB_STATUSES.join(', ')}`);
       }
       
-      // Validate the transition
-      const { data: currentHackathon, error: fetchError } = await supabase
-        .from('hackathons')
-        .select('status')
-        .eq('id', hackathonId)
-        .maybeSingle();
-      
-      if (fetchError) {
-        console.error('Error fetching current hackathon status:', fetchError);
-        throw new Error(`Failed to fetch current hackathon status: ${fetchError.message}`);
-      }
-      
-      if (!currentHackathon) {
-        throw new Error('Hackathon not found');
-      }
-      
-      const currentStatus = currentHackathon.status as HackathonStatus;
-      console.log('Current status:', currentStatus, 'Target status:', status);
-      
-      // Check if the transition is valid
-      if (!validTransitions[currentStatus]?.includes(status)) {
-        throw new Error(`Invalid phase transition from ${currentStatus} to ${status}`);
-      }
-      
-      // For judging phase, ensure there are projects
-      if (status === 'judging') {
-        const { count, error: projectsError } = await supabase
-          .from('projects')
-          .select('*', { count: 'exact', head: true })
-          .eq('hackathon_id', hackathonId);
-        
-        if (projectsError) {
-          console.error('Error counting projects:', projectsError);
-          throw new Error(`Failed to count projects: ${projectsError.message}`);
-        }
-        
-        if (count === 0) {
-          throw new Error('Cannot transition to judging phase as there are no submitted projects');
-        }
-      }
-      
-      // Update the hackathon status
-      console.log('Updating hackathon status to:', status);
-      
       try {
-        // Send the exact string value without any modifications
-        const { data, error: updateError } = await supabase
+        // Validate the transition
+        const { data: currentHackathon, error: fetchError } = await supabase
           .from('hackathons')
-          .update({ status: status })
+          .select('status')
           .eq('id', hackathonId)
-          .select()
-          .single();
+          .maybeSingle();
+        
+        if (fetchError) {
+          console.error('Error fetching current hackathon status:', fetchError);
+          throw new Error(`Failed to fetch current hackathon status: ${fetchError.message}`);
+        }
+        
+        if (!currentHackathon) {
+          throw new Error('Hackathon not found');
+        }
+        
+        const currentStatus = currentHackathon.status as HackathonStatus;
+        console.log('Current status:', currentStatus, 'Target status:', status);
+        
+        // Check if the transition is valid
+        if (!validTransitions[currentStatus]?.includes(status)) {
+          throw new Error(`Invalid phase transition from ${currentStatus} to ${status}`);
+        }
+        
+        // For judging phase, ensure there are projects
+        if (status === 'judging') {
+          const { count, error: projectsError } = await supabase
+            .from('projects')
+            .select('*', { count: 'exact', head: true })
+            .eq('hackathon_id', hackathonId);
+          
+          if (projectsError) {
+            console.error('Error counting projects:', projectsError);
+            throw new Error(`Failed to count projects: ${projectsError.message}`);
+          }
+          
+          if (count === 0) {
+            throw new Error('Cannot transition to judging phase as there are no submitted projects');
+          }
+        }
+        
+        // Update the hackathon status - we'll use RPC to ensure this is handled properly at the database level
+        const { data, error: updateError } = await supabase.rpc('update_hackathon_status', {
+          p_hackathon_id: hackathonId,
+          p_status: status
+        });
         
         if (updateError) {
           console.error('Error updating hackathon status:', updateError);
           throw new Error(`Failed to update hackathon status: ${updateError.message}`);
         }
         
-        console.log('Successfully updated hackathon status:', data);
-        return data;
+        // Get the updated hackathon
+        const { data: updatedHackathon, error: getError } = await supabase
+          .from('hackathons')
+          .select('*')
+          .eq('id', hackathonId)
+          .single();
+        
+        if (getError) {
+          console.error('Error fetching updated hackathon:', getError);
+          throw new Error(`Failed to fetch updated hackathon: ${getError.message}`);
+        }
+        
+        console.log('Successfully updated hackathon status:', updatedHackathon);
+        return updatedHackathon;
       } catch (error: any) {
         console.error('Update operation failed:', error);
         throw error;

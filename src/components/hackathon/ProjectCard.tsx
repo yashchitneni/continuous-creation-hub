@@ -28,7 +28,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const isPastHackathon = hackathonStatus === 'past';
   const canVote = isJudgingPhase && isParticipant && project.creator_id !== currentUserId;
   
-  // Fetch the creator's profile
+  // Fetch the creator's profile - use the correct user_id field
   const { data: creatorProfile } = useUserProfile(project.user_id);
   
   const voteForProject = useVoteForProject();
