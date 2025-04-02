@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -81,11 +80,11 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   
   // Reset the confirm dialog and target phase when mutation completes
   useEffect(() => {
-    if (!updateHackathonPhase.isPending && isPhaseConfirmOpen) {
+    if (!updateHackathonPhase.isPending && !updateHackathonPhase.isError && isPhaseConfirmOpen) {
       setIsPhaseConfirmOpen(false);
       setTargetPhase(null);
     }
-  }, [updateHackathonPhase.isPending, isPhaseConfirmOpen]);
+  }, [updateHackathonPhase.isPending, updateHackathonPhase.isError, isPhaseConfirmOpen]);
   
   // Log the hackathon object every time it changes
   useEffect(() => {
@@ -156,9 +155,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     console.log("From current phase:", hackathon.status);
     
     try {
-      // Close dialog first
-      setIsPhaseConfirmOpen(false);
-      
       // Make sure we have a valid hackathon ID
       if (!hackathon.id) {
         console.error("Missing hackathon ID");
