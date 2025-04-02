@@ -9,8 +9,9 @@ interface UpdateHackathonPhaseParams {
   status: HackathonStatus;
 }
 
-// Define valid phase transitions
-const transitionRules: Record<HackathonStatus, HackathonStatus[]> = {
+// Define the valid phase transitions
+// Note: 'all' is only used for UI filtering and not an actual status in the database
+const transitionRules: Record<Exclude<HackathonStatus, 'all'>, HackathonStatus[]> = {
   'upcoming': ['active'],
   'active': ['judging', 'upcoming'],
   'judging': ['past', 'active'],
@@ -42,7 +43,7 @@ export const useUpdateHackathonPhase = () => {
       }
       
       // Normalize status values for comparison
-      const normalizedCurrentStatus = existingHackathon.status.toLowerCase().trim() as HackathonStatus;
+      const normalizedCurrentStatus = existingHackathon.status.toLowerCase().trim() as Exclude<HackathonStatus, 'all'>;
       const normalizedTargetStatus = status.toLowerCase().trim() as HackathonStatus;
       
       // If the status is already the same, return early
