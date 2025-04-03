@@ -78,31 +78,21 @@ export const useUpdateHackathonPhase = () => {
           }
         }
         
-        // Update the hackathon status - use the RPC function for safer updates
-        const { data, error: updateError } = await supabase.rpc('update_hackathon_status', {
-          p_hackathon_id: hackathonId,
-          p_status: status
-        });
+        // Update the hackathon status
+        const { data, error: updateError } = await supabase
+          .from('hackathons')
+          .update({ status })
+          .eq('id', hackathonId)
+          .select()
+          .single();
         
         if (updateError) {
           console.error('Error updating hackathon status:', updateError);
           throw new Error(`Failed to update hackathon status: ${updateError.message}`);
         }
         
-        // Get the updated hackathon
-        const { data: updatedHackathon, error: getError } = await supabase
-          .from('hackathons')
-          .select('*')
-          .eq('id', hackathonId)
-          .single();
-        
-        if (getError) {
-          console.error('Error fetching updated hackathon:', getError);
-          throw new Error(`Failed to fetch updated hackathon: ${getError.message}`);
-        }
-        
-        console.log('Successfully updated hackathon status:', updatedHackathon);
-        return updatedHackathon;
+        console.log('Successfully updated hackathon status:', data);
+        return data;
       } catch (error: any) {
         console.error('Update operation failed:', error);
         throw error;

@@ -18,8 +18,11 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Clock, Calendar, CheckCircle, Award, Calendar as CalendarIcon } from 'lucide-react';
-import { useUpdateHackathonPhase, HackathonStatus as PhaseStatus } from '@/hooks/useUpdateHackathonPhase';
+import { useUpdateHackathonPhase } from '@/hooks/useUpdateHackathonPhase';
 import { toast } from '@/hooks/use-toast';
+
+// Define PhaseStatus without importing it from useUpdateHackathonPhase to avoid type conflicts
+type PhaseStatus = 'upcoming' | 'active' | 'judging' | 'past';
 
 interface PhaseManagerProps {
   hackathon: {
@@ -29,7 +32,7 @@ interface PhaseManagerProps {
   isCreator: boolean;
 }
 
-// Use the ones from useUpdateHackathonPhase
+// Define valid statuses locally
 const VALID_STATUSES: PhaseStatus[] = ['upcoming', 'active', 'judging', 'past'];
 
 const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => {
@@ -66,7 +69,6 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
     try {
       setIsUpdating(true);
       setUpdateError(null);
-      console.log('Confirming phase change to:', targetPhase);
       
       await updateHackathonPhase.mutateAsync({
         hackathonId: hackathon.id,
@@ -80,6 +82,16 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
       setUpdateError(error.message || 'An unexpected error occurred');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleCloseDialog = (open: boolean) => {
+    if (!isUpdating) {
+      setIsConfirmDialogOpen(open);
+      if (!open) {
+        setTargetPhase(null);
+        setUpdateError(null);
+      }
     }
   };
 
@@ -139,15 +151,7 @@ const PhaseManager: React.FC<PhaseManagerProps> = ({ hackathon, isCreator }) => 
 
       <AlertDialog 
         open={isConfirmDialogOpen} 
-        onOpenChange={(open) => {
-          if (!isUpdating) {
-            setIsConfirmDialogOpen(open);
-            if (!open) {
-              setTargetPhase(null);
-              setUpdateError(null);
-            }
-          }
-        }}
+        onOpenChange={handleCloseDialog}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
