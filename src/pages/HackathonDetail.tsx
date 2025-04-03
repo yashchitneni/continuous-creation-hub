@@ -177,7 +177,7 @@ const HackathonDetail = () => {
             {isCreator && (
               <HackathonPhaseManager
                 hackathonId={hackathon.id}
-                currentPhase={typedHackathon.status as HackathonStatus}
+                currentPhase={typedHackathon.status}
                 isCreator={isCreator}
                 onPhaseChanged={refetchHackathon}
               />
