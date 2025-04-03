@@ -185,6 +185,7 @@ export type Database = {
       }
       votes: {
         Row: {
+          comment: string | null
           created_at: string
           function_score: number
           id: string
@@ -194,6 +195,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          comment?: string | null
           created_at?: string
           function_score?: number
           id?: string
@@ -203,6 +205,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          comment?: string | null
           created_at?: string
           function_score?: number
           id?: string

@@ -180,7 +180,7 @@ export const useGetUserVote = (projectId?: string, userId?: string) => {
 
       const { data, error } = await supabase
         .from('votes')
-        .select('story_score, style_score, function_score')
+        .select('story_score, style_score, function_score, comment')
         .eq('project_id', projectId)
         .eq('user_id', userId)
         .maybeSingle();
