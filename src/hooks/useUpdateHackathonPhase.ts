@@ -100,6 +100,7 @@ export const useUpdateHackathonPhase = () => {
     },
     onSuccess: (data) => {
       console.log('Phase update mutation succeeded:', data);
+      // Invalidate queries to update UI state
       queryClient.invalidateQueries({ queryKey: ['hackathon', data.id] });
       queryClient.invalidateQueries({ queryKey: ['hackathons'] });
       

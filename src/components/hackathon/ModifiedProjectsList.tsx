@@ -31,13 +31,28 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
   
   const hasUserSubmittedProject = user && projects.some(project => project.user_id === user.id);
   
-  let sortedProjects = [...projects];
-  // Only sort by votes for past hackathons, not during judging
+  // Get project scores from votes to determine the winner by total score
+  const projectsWithScores = [...projects].map(project => {
+    // Calculate the total score based on the votes
+    const totalScore = project.total_score || 0;
+    return {
+      ...project,
+      totalScore
+    };
+  });
+  
+  // Sort projects by score - but only sort for past hackathons
+  let sortedProjects = [...projectsWithScores];
   if (isPastHackathon) {
     sortedProjects.sort((a, b) => {
-      const aScore = a.vote_count || 0;
-      const bScore = b.vote_count || 0;
-      return bScore - aScore;
+      // First check if we have actual scores
+      if (a.totalScore !== undefined && b.totalScore !== undefined) {
+        return b.totalScore - a.totalScore;
+      }
+      // Fall back to vote count if no scores
+      const aVotes = a.vote_count || 0;
+      const bVotes = b.vote_count || 0;
+      return bVotes - aVotes;
     });
   }
   
@@ -45,6 +60,10 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
   const winnerProject = isPastHackathon && sortedProjects.length > 0 
     ? sortedProjects[0] 
     : null;
+
+  console.log('Projects with scores:', projectsWithScores);
+  console.log('Sorted projects:', sortedProjects);
+  console.log('Winner project:', winnerProject);
 
   return (
     <div className="mb-10">

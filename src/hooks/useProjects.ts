@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -186,6 +187,7 @@ export const useGetUserVote = (projectId?: string, userId?: string) => {
         .maybeSingle();
       
       if (error) throw error;
+      
       return data as VoteScores | null;
     },
     enabled: !!projectId && !!userId
@@ -221,11 +223,13 @@ export const useProjectScores = (projectId?: string) => {
       const styleTotal = data.reduce((sum, vote) => sum + (vote.style_score || 0), 0);
       const functionTotal = data.reduce((sum, vote) => sum + (vote.function_score || 0), 0);
       
+      const totalScore = (storyTotal + styleTotal + functionTotal) / (voteCount * 3);
+      
       return {
         story_score: storyTotal / voteCount,
         style_score: styleTotal / voteCount,
         function_score: functionTotal / voteCount,
-        total_score: (storyTotal + styleTotal + functionTotal) / (voteCount * 3),
+        total_score: totalScore, // Make sure this is calculated correctly
         vote_count: voteCount
       };
     },

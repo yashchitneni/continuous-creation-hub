@@ -12,7 +12,7 @@ import {
   useDeleteHackathon,
   HackathonStatus
 } from '@/hooks/useHackathons';
-import { useHackathonProjects } from '@/hooks/useProjects';
+import { useHackathonProjects, useProjectScores } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft } from 'lucide-react';
@@ -45,7 +45,55 @@ const HackathonDetail = () => {
   const { data: participants = [], isLoading: loadingParticipants } = useHackathonParticipants(id);
   const { data: projects = [], isLoading: loadingProjects } = useHackathonProjects(id);
   
+  // Fetch project scores for all projects if we're in judging or past phase
+  useEffect(() => {
+    const fetchProjectScores = async () => {
+      if (!projects || projects.length === 0 || !(hackathon?.status === 'judging' || hackathon?.status === 'past')) {
+        return;
+      }
+      
+      try {
+        const updatedProjects = [...projects];
+        
+        for (let i = 0; i < updatedProjects.length; i++) {
+          const project = updatedProjects[i];
+          const { data: scores, error } = await supabase
+            .from('votes')
+            .select('story_score, style_score, function_score')
+            .eq('project_id', project.id);
+            
+          if (error) {
+            console.error(`Error fetching scores for project ${project.id}:`, error);
+            continue;
+          }
+          
+          if (scores && scores.length > 0) {
+            const voteCount = scores.length;
+            const storyTotal = scores.reduce((sum, vote) => sum + (vote.story_score || 0), 0);
+            const styleTotal = scores.reduce((sum, vote) => sum + (vote.style_score || 0), 0);
+            const functionTotal = scores.reduce((sum, vote) => sum + (vote.function_score || 0), 0);
+            
+            const totalScore = (storyTotal + styleTotal + functionTotal) / (voteCount * 3);
+            
+            project.total_score = totalScore;
+            project.story_score = storyTotal / voteCount;
+            project.style_score = styleTotal / voteCount;
+            project.function_score = functionTotal / voteCount;
+          }
+        }
+        
+        // Log the updated projects with scores
+        console.log('Projects with scores:', updatedProjects);
+      } catch (error) {
+        console.error('Error calculating project scores:', error);
+      }
+    };
+    
+    fetchProjectScores();
+  }, [projects, hackathon?.status]);
+  
   console.log("Hackathon data:", hackathon);
+  console.log("Projects data:", projects);
   
   useEffect(() => {
     if (!id) return;
