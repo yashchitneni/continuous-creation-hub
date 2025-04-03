@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -29,7 +28,6 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
   const isJudgingHackathon = hackathon.status === 'judging';
   const isPastHackathon = hackathon.status === 'past';
   
-  // Check if the current user has already submitted a project
   const hasUserSubmittedProject = user && projects.some(project => project.user_id === user.id);
   
   let sortedProjects = [...projects];
@@ -58,11 +56,6 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
                 : 'No Projects Yet'}
         </h2>
         
-        {/* Show submit button only if all conditions are met:
-            1. User is logged in
-            2. User is a participant
-            3. Hackathon is active
-            4. User has NOT already submitted a project */}
         {user && isParticipant && isActiveHackathon && !hasUserSubmittedProject ? (
           <Button onClick={() => setIsSubmitDialogOpen(true)}>
             Submit Your Project
@@ -82,17 +75,17 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
           {isActiveHackathon ? (
             <>
               <p className="mb-6">Be the first to submit a project for this hackathon!</p>
-              {user && isParticipant && !hasUserSubmittedProject ? (
+              {user && isParticipant && !hasUserSubmittedProject && (
                 <Button onClick={() => setIsSubmitDialogOpen(true)}>
                   Submit Your Project
                 </Button>
-              ) : user && !isParticipant ? (
+              )}
+              {user && !isParticipant && (
                 <Button onClick={onJoinHackathon}>
                   Join Hackathon to Submit
                 </Button>
-              ) : user && isParticipant && hasUserSubmittedProject ? (
-                <p className="text-muted-foreground">You've already submitted a project for this hackathon.</p>
-              ) : (
+              )}
+              {!user && (
                 <Button asChild>
                   <Link to="/auth">Sign In to Join</Link>
                 </Button>
