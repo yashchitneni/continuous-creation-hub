@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { HackathonStatus } from '@/hooks/useHackathons';
@@ -27,7 +27,8 @@ interface HackathonHeaderProps {
   isJoinHackathonPending: boolean;
   isSubmitDialogOpen: boolean;
   setIsSubmitDialogOpen: (isOpen: boolean) => void;
-  updatePhaseLoading: boolean;
+  hasUserSubmittedProject: boolean; // New prop
+  setIsParticipantsDialogOpen: (isOpen: boolean) => void; // New prop
 }
 
 const HackathonHeader: React.FC<HackathonHeaderProps> = ({
@@ -40,13 +41,15 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
   isJoinHackathonPending,
   isSubmitDialogOpen,
   setIsSubmitDialogOpen,
+  hasUserSubmittedProject,
+  setIsParticipantsDialogOpen,
 }) => {
   const isCreator = user?.id === hackathon.creator_id;
   
   // Ensure the status is one of the valid values
   const validStatuses: HackathonStatus[] = ['upcoming', 'active', 'judging', 'past'];
   const safeStatus: HackathonStatus = validStatuses.includes(hackathon.status as HackathonStatus) 
-    ? hackathon.status as HackathonStatus 
+    ? (hackathon.status as HackathonStatus) 
     : 'upcoming';
   
   const getStatusBadgeVariant = () => {
@@ -69,7 +72,7 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
     }
   };
   
-  const canSubmitProject = isParticipant && safeStatus === 'active';
+  const canSubmitProject = isParticipant && safeStatus === 'active' && !hasUserSubmittedProject;
 
   return (
     <div className="mb-8">
@@ -88,10 +91,13 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
               </span>
             </div>
             
-            <div className="flex items-center text-sm text-muted-foreground">
+            <button 
+              onClick={() => setIsParticipantsDialogOpen(true)}
+              className="flex items-center text-sm text-muted-foreground hover:text-jungle transition-colors"
+            >
               <Users className="h-4 w-4 mr-1" />
               <span>{participantCount} Participants</span>
-            </div>
+            </button>
           </div>
         </div>
         
@@ -115,7 +121,6 @@ const HackathonHeader: React.FC<HackathonHeaderProps> = ({
           {/* Submit Project Button (for participants during active phase) */}
           {canSubmitProject && (
             <Button 
-              variant={isParticipant ? "default" : "outline"}
               onClick={() => setIsSubmitDialogOpen(true)}
             >
               Submit Project

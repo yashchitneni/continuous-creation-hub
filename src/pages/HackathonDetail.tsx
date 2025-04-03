@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -15,7 +15,7 @@ import {
 import { useHackathonProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Trash2, Users } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import HackathonHeader from '@/components/hackathon/HackathonHeader';
 import ModifiedProjectsList from '@/components/hackathon/ModifiedProjectsList';
 import SubmitProjectForm from '@/components/hackathon/SubmitProjectForm';
@@ -144,7 +144,7 @@ const HackathonDetail = () => {
   };
   
   const isCreator = user?.id === typedHackathon.creator_id;
-  console.log("Is creator:", isCreator);
+  const hasUserSubmittedProject = user && projects.some(project => project.user_id === user.id);
   
   return (
     <PageLayout>
@@ -169,25 +169,15 @@ const HackathonDetail = () => {
             isJoinHackathonPending={joinHackathon.isPending}
             isSubmitDialogOpen={isSubmitDialogOpen}
             setIsSubmitDialogOpen={setIsSubmitDialogOpen}
-            updatePhaseLoading={false}
+            hasUserSubmittedProject={hasUserSubmittedProject}
+            setIsParticipantsDialogOpen={setIsParticipantsDialogOpen}
           />
           
-          <div className="mt-4 mb-4 flex flex-wrap gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsParticipantsDialogOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              View Participants ({participantCount})
-            </Button>
-            
+          <div className="mt-4 mb-8">
             {isCreator && (
               <HackathonPhaseManager
                 hackathonId={hackathon.id}
-                currentPhase={typedHackathon.status as any}
-                participantCount={participantCount}
-                projectCount={projects.length}
+                currentPhase={typedHackathon.status as HackathonStatus}
                 isCreator={isCreator}
                 onPhaseChanged={refetchHackathon}
               />
