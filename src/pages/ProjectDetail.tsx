@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tag } from '@/components/ui/tag';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Award, Calendar, Github, ExternalLink, Star, Users } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Award, Calendar, Github, ExternalLink, Star, Users, Lock } from 'lucide-react';
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -20,6 +21,7 @@ const ProjectDetail = () => {
   const [storyScore, setStoryScore] = useState(5);
   const [styleScore, setStyleScore] = useState(5);
   const [functionScore, setFunctionScore] = useState(5);
+  const [comment, setComment] = useState('');
   
   console.log("Project ID from params:", projectId);
   
@@ -45,12 +47,17 @@ const ProjectDetail = () => {
       userId: user.id,
       storyScore,
       styleScore,
-      functionScore
+      functionScore,
+      comment: comment.trim() || undefined // Only send comment if not empty
     });
   };
   
   const isJudgingPhase = hackathon?.status === 'judging';
+  const isPastPhase = hackathon?.status === 'past';
   const canVote = isJudgingPhase && isParticipant && !userVote && user;
+  
+  // Only show scores after judging phase is complete or if user has already voted
+  const shouldShowPublicScores = isPastPhase || (userVote && isJudgingPhase);
   
   if (loadingProject || loadingHackathon) {
     return (
@@ -123,7 +130,8 @@ const ProjectDetail = () => {
                 </div>
               </div>
               
-              {projectScores && projectScores.vote_count > 0 && (
+              {/* Only show score in the header if it's past judging phase or if user has already voted */}
+              {shouldShowPublicScores && projectScores && projectScores.vote_count > 0 && (
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-center">
                     <div className="text-2xl font-bold text-jungle">
@@ -133,6 +141,14 @@ const ProjectDetail = () => {
                       {projectScores.vote_count} {projectScores.vote_count === 1 ? 'vote' : 'votes'}
                     </div>
                   </div>
+                </div>
+              )}
+              
+              {/* Show locked indicator during judging if user hasn't voted yet */}
+              {isJudgingPhase && !userVote && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Ratings hidden until you vote</span>
                 </div>
               )}
             </div>
@@ -179,7 +195,10 @@ const ProjectDetail = () => {
               <Tabs defaultValue="details" className="mb-10">
                 <TabsList className="mb-6">
                   <TabsTrigger value="details">Project Details</TabsTrigger>
-                  <TabsTrigger value="scores" disabled={!projectScores || projectScores.vote_count === 0}>
+                  <TabsTrigger 
+                    value="scores" 
+                    disabled={!shouldShowPublicScores || !projectScores || projectScores.vote_count === 0}
+                  >
                     Ratings
                   </TabsTrigger>
                 </TabsList>
@@ -192,7 +211,7 @@ const ProjectDetail = () => {
                 </TabsContent>
                 
                 <TabsContent value="scores">
-                  {projectScores && projectScores.vote_count > 0 ? (
+                  {shouldShowPublicScores && projectScores && projectScores.vote_count > 0 ? (
                     <div className="space-y-6">
                       <h2 className="text-2xl font-semibold mb-4">Project Ratings</h2>
                       
@@ -244,7 +263,11 @@ const ProjectDetail = () => {
                     </div>
                   ) : (
                     <div className="text-center py-10">
-                      <p className="text-muted-foreground">No ratings available yet.</p>
+                      <p className="text-muted-foreground">
+                        {isJudgingPhase 
+                          ? "Ratings will be visible once you've submitted your own vote" 
+                          : "No ratings available yet."}
+                      </p>
                     </div>
                   )}
                 </TabsContent>
@@ -264,13 +287,13 @@ const ProjectDetail = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <label className="text-sm font-medium">
-                          Story ({storyScore}/10)
+                          Story ({storyScore.toFixed(1)}/10)
                         </label>
                       </div>
                       <Slider
                         min={1}
                         max={10}
-                        step={1}
+                        step={0.5}
                         value={[storyScore]}
                         onValueChange={(values) => setStoryScore(values[0])}
                       />
@@ -282,13 +305,13 @@ const ProjectDetail = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <label className="text-sm font-medium">
-                          Style ({styleScore}/10)
+                          Style ({styleScore.toFixed(1)}/10)
                         </label>
                       </div>
                       <Slider
                         min={1}
                         max={10}
-                        step={1}
+                        step={0.5}
                         value={[styleScore]}
                         onValueChange={(values) => setStyleScore(values[0])}
                       />
@@ -300,18 +323,33 @@ const ProjectDetail = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <label className="text-sm font-medium">
-                          Functionality ({functionScore}/10)
+                          Functionality ({functionScore.toFixed(1)}/10)
                         </label>
                       </div>
                       <Slider
                         min={1}
                         max={10}
-                        step={1}
+                        step={0.5}
                         value={[functionScore]}
                         onValueChange={(values) => setFunctionScore(values[0])}
                       />
                       <p className="text-xs text-muted-foreground">
                         How well the project works and delivers its promised features
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 pt-4">
+                      <label className="text-sm font-medium">
+                        Feedback Comments (Optional)
+                      </label>
+                      <Textarea
+                        placeholder="Share your thoughts about this project..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="resize-y min-h-[100px]"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your feedback will help the project creator improve their work
                       </p>
                     </div>
                   </CardContent>
@@ -339,7 +377,7 @@ const ProjectDetail = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Story</span>
-                        <span className="text-jungle font-bold">{userVote.story_score}/10</span>
+                        <span className="text-jungle font-bold">{userVote.story_score.toFixed(1)}/10</span>
                       </div>
                       <Progress value={userVote.story_score * 10} className="h-2" />
                     </div>
@@ -347,7 +385,7 @@ const ProjectDetail = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Style</span>
-                        <span className="text-jungle font-bold">{userVote.style_score}/10</span>
+                        <span className="text-jungle font-bold">{userVote.style_score.toFixed(1)}/10</span>
                       </div>
                       <Progress value={userVote.style_score * 10} className="h-2" />
                     </div>
@@ -355,7 +393,7 @@ const ProjectDetail = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Functionality</span>
-                        <span className="text-jungle font-bold">{userVote.function_score}/10</span>
+                        <span className="text-jungle font-bold">{userVote.function_score.toFixed(1)}/10</span>
                       </div>
                       <Progress value={userVote.function_score * 10} className="h-2" />
                     </div>
@@ -368,6 +406,13 @@ const ProjectDetail = () => {
                         </span>
                       </div>
                     </div>
+
+                    {userVote.comment && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm font-medium mb-2">Your Feedback:</p>
+                        <p className="text-sm text-muted-foreground italic">"{userVote.comment}"</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}

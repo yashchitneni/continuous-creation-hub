@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -31,7 +32,8 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
   const hasUserSubmittedProject = user && projects.some(project => project.user_id === user.id);
   
   let sortedProjects = [...projects];
-  if (isJudgingHackathon || isPastHackathon) {
+  // Only sort by votes for past hackathons, not during judging
+  if (isPastHackathon) {
     sortedProjects.sort((a, b) => {
       const aScore = a.vote_count || 0;
       const bScore = b.vote_count || 0;
@@ -39,7 +41,8 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
     });
   }
   
-  const winnerProject = (isJudgingHackathon || isPastHackathon) && sortedProjects.length > 0 
+  // Only show winner for past hackathons (not during judging)
+  const winnerProject = isPastHackathon && sortedProjects.length > 0 
     ? sortedProjects[0] 
     : null;
 
@@ -99,11 +102,12 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
         </div>
       ) : (
         <div className="space-y-8">
-          {(isPastHackathon || isJudgingHackathon) && winnerProject && (
+          {/* Only show winner section for past hackathons, not during judging */}
+          {isPastHackathon && winnerProject && (
             <div className="mb-8">
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Award className="h-5 w-5 text-yellow-400" />
-                <span>{isPastHackathon ? 'Winning Project' : 'Current Leader'}</span>
+                <span>Winning Project</span>
               </h3>
               
               <div className="grid grid-cols-1">
@@ -125,7 +129,7 @@ const ModifiedProjectsList: React.FC<ModifiedProjectsListProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedProjects.map((project, index) => (
-                ((isPastHackathon || isJudgingHackathon) && index === 0) ? null : (
+                ((isPastHackathon) && index === 0) ? null : (
                   <ClickableProjectCard
                     key={project.id}
                     project={project}

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +19,7 @@ export interface VoteScores {
   story_score: number;
   style_score: number;
   function_score: number;
+  comment?: string;
 }
 
 // Fetch all projects for a hackathon
@@ -233,7 +233,7 @@ export const useProjectScores = (projectId?: string) => {
   });
 };
 
-// Vote for a project with criteria scores
+// Vote for a project with criteria scores and comment
 export const useVoteForProject = () => {
   const queryClient = useQueryClient();
   
@@ -243,13 +243,15 @@ export const useVoteForProject = () => {
       userId, 
       storyScore, 
       styleScore, 
-      functionScore 
+      functionScore,
+      comment
     }: { 
       projectId: string, 
       userId: string, 
       storyScore: number, 
       styleScore: number, 
-      functionScore: number 
+      functionScore: number,
+      comment?: string
     }) => {
       const { data: project, error: projectError } = await supabase
         .from('projects')
@@ -291,7 +293,8 @@ export const useVoteForProject = () => {
           user_id: userId,
           story_score: storyScore,
           style_score: styleScore,
-          function_score: functionScore
+          function_score: functionScore,
+          comment
         }])
         .select()
         .single();
@@ -313,7 +316,7 @@ export const useVoteForProject = () => {
       
       toast({
         title: 'Vote submitted',
-        description: 'Your ratings have been recorded!',
+        description: 'Your ratings and feedback have been recorded!',
       });
     },
     onError: (error: any) => {
