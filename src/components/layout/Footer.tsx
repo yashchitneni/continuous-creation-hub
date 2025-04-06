@@ -11,7 +11,7 @@ const Footer = () => {
       <div className="container px-6 py-12 mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">Just Keep Building</h3>
+            <h3 className="text-sm font-semibold tracking-wider uppercase">Hackistan</h3>
             <p className="mt-4 text-sm text-muted-foreground">
               A community of builders learning and creating together through mini-hackathons.
             </p>
@@ -65,7 +65,7 @@ const Footer = () => {
         
         <div className="pt-8 mt-8 border-t border-muted-foreground/20">
           <p className="text-sm text-center text-muted-foreground">
-            &copy; {currentYear} Just Keep Building. All rights reserved.
+            &copy; {currentYear} Hackistan. All rights reserved.
           </p>
         </div>
       </div>

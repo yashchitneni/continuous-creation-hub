@@ -61,7 +61,7 @@ const About = () => {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              About <span className="text-gradient">Just Keep Building</span>
+              About <span className="text-gradient">Hackistan</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-8">
@@ -79,7 +79,7 @@ const About = () => {
               <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>
-                  Just Keep Building stands for the philosophy of continuous building—it's more than just hackathons; it's a space for constant learning, collaboration, and iterative growth.
+                  Hackistan stands for the philosophy of continuous building—it's more than just hackathons; it's a space for constant learning, collaboration, and iterative growth.
                 </p>
                 <p>
                   We believe that the best way to learn is by doing, and the best way to grow is by sharing your work with others and receiving feedback. Our platform enables creators to consistently build, collaborate, and innovate.
@@ -149,7 +149,7 @@ const About = () => {
               <h2 className="text-3xl font-bold mb-6">Our Origin Story</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>
-                  Just Keep Building started from a mini-hackathon that showcased the power of tools, creativity, and community voting. What began as a weekend event evolved into a broader, ongoing platform.
+                  Hackistan started from a mini-hackathon that showcased the power of tools, creativity, and community voting. What began as a weekend event evolved into a broader, ongoing platform.
                 </p>
                 <p>
                   We noticed that while hackathons were great for spurring innovation, the energy and creativity often dissipated after the event. We wanted to create a space where that momentum could be maintained and where building became a continuous practice rather than a one-time event.
@@ -227,7 +227,7 @@ const About = () => {
         <div className="max-w-7xl mx-auto">
           <div className="glassmorphism rounded-xl p-8 md:p-12">
             <blockquote className="text-xl md:text-2xl font-medium text-center mb-8">
-              "Just Keep Building has transformed how I approach learning and building. The continuous feedback loop and supportive community have accelerated my growth as a developer exponentially."
+              "Hackistan has transformed how I approach learning and building. The continuous feedback loop and supportive community have accelerated my growth as a developer exponentially."
             </blockquote>
             
             <div className="flex flex-col items-center">

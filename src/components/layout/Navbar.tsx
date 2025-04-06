@@ -63,10 +63,10 @@ const Navbar = () => {
           className="flex items-center gap-2 transition-all duration-300"
         >
           <div className="w-8 h-8 rounded-md bg-gradient-to-br from-jungle to-cambridge flex items-center justify-center">
-            <span className="text-white font-bold text-sm">JKB</span>
+            <span className="text-white font-bold text-sm">HK</span>
           </div>
           <span className="font-bold text-lg hidden sm:block text-foreground">
-            Just Keep Building
+            Hackistan
           </span>
         </Link>
 

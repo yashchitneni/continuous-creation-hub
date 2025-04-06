@@ -60,7 +60,7 @@ const CommunitySection = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Join Our Community of Builders</h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Just Keep Building is more than a platform—it's a community of continuous creators 
+            Hackistan is more than a platform—it's a community of continuous creators 
             who support each other in learning, building, and growing together.
           </p>
         </div>
